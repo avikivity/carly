@@ -1,0 +1,7 @@
+- hosts: nodes
+  tasks:
+    - name: "prepare source directory"
+      file: path=source state=directory
+
+    - name: "get source from github"
+      git:  repo=git://github.com/scylladb/scylla dest=source/scylla version={{lookup('env','TAG')}} update=yes

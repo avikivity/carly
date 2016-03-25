@@ -1,0 +1,7 @@
+- hosts: nodes
+  tasks:
+    - name: "update apt"
+      apt:  update_cache=true upgrade=safe
+
+    - name: "install git"
+      apt:  name=git state=present
