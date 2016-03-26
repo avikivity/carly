@@ -35,7 +35,17 @@
         - libxml2-devel
         - python3-pyparsing
 
+    - name: "submodules"
+      shell: git submodule init && git submodule update --recursive
+      args:
+         chdir: source/scylla
+
     - name: "configure scylla"
       shell: ./configure.py --mode=release --with=scylla --disable-xen
+      args:
+         chdir: source/scylla
+
+    - name: "build scylla"
+      shell: ninja-build build/release/scylla -j4
       args:
          chdir: source/scylla
