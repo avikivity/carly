@@ -3,5 +3,39 @@
     - name: "prepare source directory"
       file: path=source state=directory
 
+    - name: "install devopment packages"
+      yum: name=git state=present
+
     - name: "get source from github"
       git:  repo=git://github.com/scylladb/scylla dest=source/scylla version={{lookup('env','TAG')}} update=yes
+
+    - name: "install devopment packages"
+      yum: name={{item}} state=present
+      with_items:
+        - yaml-cpp-devel
+        - lz4-devel
+        - zlib-devel
+        - snappy-devel
+        - jsoncpp-devel
+        - thrift-devel
+        - antlr3-tool
+        - antlr3-C++-devel
+        - libasan
+        - libubsan
+        - gcc-c++
+        - gnutls-devel
+        - ninja-build
+        - ragel
+        - libaio-devel
+        - cryptopp-devel
+        - xfsprogs-devel
+        - numactl-devel
+        - hwloc-devel
+        - libpciaccess-devel
+        - libxml2-devel
+        - python3-pyparsing
+
+    - name: "configure scylla"
+      shell: ./configure.py --mode=release --with=scylla --disable-xen
+      args:
+         chdir: source/scylla
