@@ -1,0 +1,4 @@
+- hosts: nodes
+  tasks:
+    - name: "implode source directory"
+      file: path=source state=absent
