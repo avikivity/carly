@@ -1,0 +1,4 @@
+- hosts: nodes
+  tasks:
+      - name: "running?"
+        command: pgrep scylla

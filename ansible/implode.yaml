@@ -2,3 +2,6 @@
   tasks:
     - name: "implode source directory"
       file: path=source state=absent
+
+    - name: "implode data directory"
+      file: path=/var/lib/scylla state=absent
