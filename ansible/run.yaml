@@ -1,0 +1,8 @@
+- hosts: nodes
+  tasks:
+      - name: "run the server"
+        command: ./build/release/scylla
+        args:
+            chdir: /root/source/scylla
+        async: 86400000
+        poll: 0

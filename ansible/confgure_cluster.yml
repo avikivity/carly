@@ -1,0 +1,10 @@
+- hosts: nodes
+  tasks:
+    - name: update listen_address
+      lineinfile: "dest=source/scylla/conf/scylla.yaml backup=yes state=present regexp='^listen_address:' line='listen_address: {{ansible_default_ipv4[\"address\"]}}'"
+
+    - name: update seeds
+      lineinfile: "dest=source/scylla/conf/scylla.yaml backrefs=yes backup=yes state=present regexp='^( +)- seeds:' line='\\1- seeds: \"{{seeds}}\"'"
+
+    - name: update rpc
+      lineinfile: "dest=source/scylla/conf/scylla.yaml backrefs=yes backup=yes state=present regexp='^rpc_address:' line='rpc_address: {{ansible_default_ipv4[\"address\"]}}'"

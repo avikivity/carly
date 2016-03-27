@@ -1,0 +1,4 @@
+- hosts: nodes
+  tasks:
+      - name: "kill the server"
+        command: pkill scylla
