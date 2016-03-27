@@ -3,7 +3,7 @@
     - name: "prepare source directory"
       file: path=source state=directory
 
-    - name: "install devopment packages"
+    - name: "install git"
       yum: name=git state=present
 
     - name: "get source from github"
