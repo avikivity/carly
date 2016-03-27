@@ -7,7 +7,7 @@
       yum: name=git state=present
 
     - name: "get source from github"
-      git:  repo=git://github.com/scylladb/scylla dest=source/scylla version={{lookup('env','TAG')}} update=yes
+      git:  repo=git://github.com/scylladb/scylla dest=source/scylla version={{tag}} update=yes
 
     - name: "install devopment packages"
       yum: name={{item}} state=present
@@ -45,7 +45,7 @@
       args:
          chdir: source/scylla
 
-    - name: "build scylla"
-      shell: ninja-build build/release/scylla -j4
+    - name: "build"
+      shell: ninja-build build/release/scylla -j10
       args:
          chdir: source/scylla
