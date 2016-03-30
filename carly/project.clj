@@ -6,6 +6,4 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/java.jmx "0.3.1"]
                  [clojurewerkz/cassaforte "2.1.0-beta1"]
-                 [jkni/jepsen "0.0.7-SNAPSHOT"] ]
-  :source-paths ["src" "scylladb-jepsen/cassandra/src"]
-  :test-paths ["test" "scylladb-jepsen/cassandra/test"])
+                 [jkni/jepsen "0.0.7-SNAPSHOT"] ])
