@@ -1,7 +1,7 @@
 - hosts: nodes
   tasks:
       - name: "run the server"
-        command: ./build/release/scylla
+        command: ./build/release/scylla --developer-mode true --cpuset {{total_cpus*index}}-{{total_cpus*(index+1)-1}} --memory "{{memory_per_node}}"
         args:
             chdir: /root/source/scylla
         async: 86400000
