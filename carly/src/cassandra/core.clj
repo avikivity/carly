@@ -25,7 +25,9 @@
             [clojurewerkz.cassaforte.client :as cassandra]
             [clojurewerkz.cassaforte.query :refer :all]
             [clojurewerkz.cassaforte.policies :refer :all]
-            [clojurewerkz.cassaforte.cql :as cql])
+            [clojurewerkz.cassaforte.cql :as cql]
+            [clj-yaml.core :as yaml]
+            )
   (:import (clojure.lang ExceptionInfo)
            (com.datastax.driver.core ConsistencyLevel)
            (com.datastax.driver.core.policies RetryPolicy
@@ -144,40 +146,69 @@
        true
        (catch RuntimeException _ false)))
 
-(defn install!
-  "Installs ScyllaDB on the given node."
-  [node version])
-
-(defn configure!
-  "Uploads configuration files to the given node."
-  [node test]
+(defn configure! [node test]
   (info node "configuring ScyllaDB")
-  (control/exec :cp :-f "/var/lib/scylla/conf/scylla.yaml.orig" "/var/lib/scylla/conf/scylla.yaml")
-  (doseq [rep (into ["\"s/cluster_name: .*/cluster_name: 'jepsen'/g\""
-                     "\"s/row_cache_size_in_mb: .*/row_cache_size_in_mb: 20/g\""
-                     (str "\"s/seeds: .*/seeds: '" (dns-resolve :n1) "," (dns-resolve :n2) "'/g\"")
-                     (str "\"s/listen_address: .*/listen_address: " (dns-resolve node)
-                          "/g\"")
-                     (str "\"s/rpc_address: .*/rpc_address: " (dns-resolve node) "/g\"")
-                     (str "\"s/broadcast_rpc_address: .*/broadcast_rpc_address: "
-                          (net/local-ip) "/g\"")
-                     "\"s/internode_compression: .*/internode_compression: none/g\""
-                     (str "\"s/hinted_handoff_enabled:.*/hinted_handoff_enabled: "
-                          (disable-hints?) "/g\"")
-                     "\"s/commitlog_sync: .*/commitlog_sync: batch/g\""
-                     (str "\"s/# commitlog_sync_batch_window_in_ms: .*/"
-                          "commitlog_sync_batch_window_in_ms: 1/g\"")
-                     "\"s/commitlog_sync_period_in_ms: .*/#/g\""
-                     (str "\"s/# phi_convict_threshold: .*/phi_convict_threshold: " (phi-level)
-                          "/g\"")
-                     "\"/auto_bootstrap: .*/d\""]
-                    (when (compressed-commitlog?)
-                      ["\"s/#commitlog_compression.*/commitlog_compression:/g\""
-                       (str "\"s/#   - class_name: LZ4Compressor/"
-                            "    - class_name: LZ4Compressor/g\"")]))]
-    (control/exec :sed :-i (lit rep) "/var/lib/scylla/conf/scylla.yaml"))
-  (control/exec :echo (str "auto_bootstrap: " (-> test :bootstrap deref node boolean))
-                :>> "/var/lib/scylla/conf/scylla.yaml"))
+  (let [config-path (->> test :scylla :config-path)
+        config (control/exec "cat" config-path)
+        seeds (-> test :nodes first dns-resolve)
+        new-config  (-> config
+                      yaml/parse-string
+                      (merge {:cluster_name "jepsen"
+                              :row_cache_size_in_mb 20
+                              :seed_provider 
+                                 [ { :class_name "org.apache.cassandra.locator.SimpleSeedProvider"
+                                     :parameters 
+                                          [{:seeds seeds}] 
+                                  }] 
+                              
+                              :listen_address (dns-resolve node)
+                              :rpc_address (dns-resolve node) 
+                              :internode_compression (str (disable-hints?))
+                              :commitlog_sync "batch"
+                              :commitlog_sync_batch_window_in_ms 1
+                              :commitlog_sync_preiod_in_ms 10000
+                              :phi_convict_threshold (phi-level)
+                    ;:auto_bootstrap (-> test :bootstrap deref node boolean str)
+
+                              }
+
+                             (when (compressed-commitlog?)
+                                {:commitlog_compression 
+                                  [{:class_name "LZ4Compressor"}]})
+                             )
+                      (dissoc :commitlog_sync_period_in_ms)
+                      yaml/generate-string) ] 
+        (control/exec :echo new-config :> config-path)
+        (info node "configure! finished")
+        
+        ))
+
+(def cpuset-counter (atom 0))
+(defn cpuset!
+  []
+  (let [CPUS_PER_CONTAINER 4
+        low (* CPUS_PER_CONTAINER @cpuset-counter)
+        high (+ low CPUS_PER_CONTAINER -1)]
+    (swap! cpuset-counter inc)
+    (str low "-" high)))
+
+(defn scylla-command!
+  [test]
+  (let [executable (->> test :scylla :executable)
+        config-path (->> test :scylla :config-path)]
+       [ executable
+         "--log-to-syslog" "0"
+         "--options-file"  config-path
+         "--log-to-stdout" "1"
+         "--default-log-level" "info"
+         "--network-stack" "posix"
+         "--memory" "8G"
+         "--collectd" "0"
+         "--poll-mode"
+         "--developer-mode" "1"
+         "--cpuset" (cpuset!) 
+         ">&" "/dev/null" "&"
+         ]  ))
 
 (defn start!
   "Starts ScyllaDB"
@@ -185,10 +216,9 @@
   (info node "starting ScyllaDB")
   (nemesis/set-time! 0)
   (net/fast-force)
-  ;   (control/exec :service :scylla-server :start)
-  (control/exec "/root/scylla-run.sh" :--log-to-syslog :0 :--log-to-stdout :1 :--default-log-level :info :--network-stack :posix :-m :8G :--collectd :0 :--poll-mode :--developer-mode :1)
+  (control/exec "bash" "/tmp/go.sh")
   (info node "Started scylla")
-  (control/exec :service :scylla-jmx :start)
+  (meh (control/exec :service :scylla-jmx :start))
   (info node "Started scylla-jmx"))
 
 (defn guarded-start!
@@ -205,35 +235,36 @@
   "Stops ScyllaDB"
   [node]
   (info node "stopping ScyllaDB")
-  (meh (control/exec :service :scylla-jmx :stop))
-  (while (.contains (control/exec :ps :-ef) "java")
-    (Thread/sleep 1000)
-    (info node "java is still running"))
-  (meh (control/exec :killall :scylla))
+  (meh (control/exec :pkill :scylla))
   (while (.contains (control/exec :ps :-ef) "scylla")
     (Thread/sleep 1000)
     (info node "scylla is still running"))
   (info node "has stopped ScyllaDB"))
 
 (defn wipe!
-  "Shuts down Cassandra and wipes data."
   [node]
+  (info node "wipe called")
   (stop! node)
   (info node "deleting data files")
-  (meh (control/exec "/root/wipe.sh"))
+  (meh (control/exec "rm -rf /var/lib/scylla/"))
   (info node "deleted data files"))
+
+(defn put-scylla-script [node test]
+  (let [command (scylla-command! test)]
+    (control/exec :echo command :> "/tmp/go.sh")))
 
 (defn db
   "New ScyllaDB run"
   [version]
   (reify db/DB
     (setup! [_ test node]
-      (when (seq (System/getenv "LEAVE_CLUSTER_RUNNING"))
-        (wipe! node))
-      (doto node
-        (install! version)
-        (configure! test)
-        (guarded-start! test)))
+      (info node "SETUP")
+      (control/exec :dnf :install :sudo :-y)
+      (put-scylla-script node test)
+      (wipe! node)
+      (configure! node test)
+      (start! node test)
+      (info node "SETUP DONE"))
 
     (teardown! [_ test node]
       (when-not (seq (System/getenv "LEAVE_CLUSTER_RUNNING"))
@@ -241,8 +272,7 @@
 
     db/LogFiles
     (log-files [db test node]
-      ["/var/lib/scylla/system.log"])
-      ))
+      ["/var/lib/scylla/system.log"])))
 
 (defn recover
   "A generator which stops the nemesis and allows some time for recovery."
@@ -386,6 +416,9 @@
      (meh (control/exec :killall :-9 :scylla)))
 
    (fn stop  [test node] (meh (guarded-start! node test)) [:restarted node])))
+
+
+
 
 (defn cassandra-test
   [name opts]

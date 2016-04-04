@@ -5,5 +5,6 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/java.jmx "0.3.1"]
+                 [clj-yaml "0.4.0"]
                  [clojurewerkz/cassaforte "2.1.0-beta1"]
                  [jkni/jepsen "0.0.7-SNAPSHOT"] ])
