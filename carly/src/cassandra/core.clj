@@ -207,7 +207,7 @@
          "--poll-mode"
          "--developer-mode" "1"
          "--cpuset" (cpuset!) 
-         ">&" "/dev/null" "&"
+         ">&" (:logfile test) "&"
          ]  ))
 
 (defn start!
@@ -243,11 +243,9 @@
 
 (defn wipe!
   [node]
-  (info node "wipe called")
   (stop! node)
-  (info node "deleting data files")
-  (meh (control/exec "rm -rf /var/lib/scylla/"))
-  (info node "deleted data files"))
+  (meh (control/exec :rm :-rf "/var/lib/scylla/"))
+  (info node "deleted data and log files"))
 
 (defn put-scylla-script [node test]
   (let [command (scylla-command! test)]
@@ -261,6 +259,7 @@
       (info node "SETUP")
       (control/exec :dnf :install :sudo :-y)
       (put-scylla-script node test)
+      (control/exec :rm :-f (:logfile test))
       (wipe! node)
       (configure! node test)
       (start! node test)
@@ -272,7 +271,7 @@
 
     db/LogFiles
     (log-files [db test node]
-      ["/var/lib/scylla/system.log"])))
+      [(:logfile test)])))
 
 (defn recover
   "A generator which stops the nemesis and allows some time for recovery."
@@ -426,6 +425,7 @@
          {:name    (str "cassandra " name)
           :os      jepsen.os/noop
           :nodes (clojure.string/split (get (System/getenv) "NODES") #" ")
+          :logfile "/var/log/scylla.log"
           :ssh   {:username "root" :strict-host-key-checking false :private-key-path "private_key_rsa"}
           :db      (db "2.1.8")
           :bootstrap (atom #{})
