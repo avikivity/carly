@@ -151,6 +151,9 @@
   (let [config-path (->> test :scylla :config-path)
         config (control/exec "cat" config-path)
         seeds (-> test :nodes first dns-resolve)
+        commitlog-compression-options (when (compressed-commitlog?)
+                                          {:commitlog_compression 
+                                            [{:class_name "LZ4Compressor"}]})
         new-config  (-> config
                       yaml/parse-string
                       (merge {:cluster_name "jepsen"
@@ -160,7 +163,6 @@
                                      :parameters 
                                           [{:seeds seeds}] 
                                   }] 
-                              
                               :listen_address (dns-resolve node)
                               :rpc_address (dns-resolve node) 
                               :internode_compression (str (disable-hints?))
@@ -168,19 +170,13 @@
                               :commitlog_sync_batch_window_in_ms 1
                               :commitlog_sync_preiod_in_ms 10000
                               :phi_convict_threshold (phi-level)
-                              :auto_bootstrap (-> test :bootstrap deref node boolean)
-                              }
+                              :auto_bootstrap (-> test :bootstrap deref node boolean) }
 
-                             (when (compressed-commitlog?)
-                                {:commitlog_compression 
-                                  [{:class_name "LZ4Compressor"}]})
-                             )
+                              commitlog-compression-options)
                       (dissoc :commitlog_sync_period_in_ms)
                       yaml/generate-string) ] 
         (control/exec :echo new-config :> config-path)
-        (info node "configure! finished")
-        
-        ))
+        (info node "configure! finished")))
 
 (def cpuset-counter (atom 0))
 (defn cpuset!
@@ -415,13 +411,11 @@
 
    (fn stop  [test node] (meh (guarded-start! node test)) [:restarted node])))
 
-
 (defn get-nodes
   []
   (let [node-names (-> (get (System/getenv) "NODES") 
                     (clojure.string/split #" "))]
       (mapv keyword node-names)))
-
 
 (defn cassandra-test
   [name opts]
