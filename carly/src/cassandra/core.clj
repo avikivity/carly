@@ -168,8 +168,7 @@
                               :commitlog_sync_batch_window_in_ms 1
                               :commitlog_sync_preiod_in_ms 10000
                               :phi_convict_threshold (phi-level)
-                    ;:auto_bootstrap (-> test :bootstrap deref node boolean str)
-
+                              :auto_bootstrap (-> test :bootstrap deref node boolean)
                               }
 
                              (when (compressed-commitlog?)
@@ -417,6 +416,11 @@
    (fn stop  [test node] (meh (guarded-start! node test)) [:restarted node])))
 
 
+(defn get-nodes
+  []
+  (let [node-names (-> (get (System/getenv) "NODES") 
+                    (clojure.string/split #" "))]
+      (mapv keyword node-names)))
 
 
 (defn cassandra-test
@@ -424,7 +428,7 @@
   (merge tests/noop-test
          {:name    (str "cassandra " name)
           :os      jepsen.os/noop
-          :nodes (clojure.string/split (get (System/getenv) "NODES") #" ")
+          :nodes   (get-nodes)
           :logfile "/var/log/scylla.log"
           :ssh   {:username "root" :strict-host-key-checking false :private-key-path "private_key_rsa"}
           :db      (db "2.1.8")
