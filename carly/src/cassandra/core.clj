@@ -246,6 +246,13 @@
   (let [command (scylla-command! test)]
     (control/exec :echo command :> "/tmp/go.sh")))
 
+(defn hold-for-debug?
+  [node test]
+  (when (System/getenv "HOLD_AFTER_SETUP")
+    (when (= (->> test :nodes first) node)
+      (info node "HOLDING AFTER SETUP ")
+      (read-line))))
+
 (defn db
   "New ScyllaDB run"
   [version]
@@ -258,7 +265,8 @@
       (wipe! node)
       (configure! node test)
       (start! node test)
-      (info node "SETUP DONE"))
+      (info node "SETUP DONE")
+      (hold-for-debug? node test))
 
     (teardown! [_ test node]
       (when-not (seq (System/getenv "LEAVE_CLUSTER_RUNNING"))
