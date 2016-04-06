@@ -5,6 +5,7 @@
             [clojure.java.jmx :as jmx]
             [clojure.set :as set]
             [clojure.tools.logging :refer [debug info warn]]
+            [carly.core]
             [jepsen [core      :as jepsen]
              [db        :as db]
              [util      :as util :refer [meh timeout]]
@@ -25,13 +26,17 @@
             [clojurewerkz.cassaforte.query :refer :all]
             [clojurewerkz.cassaforte.policies :refer :all]
             [clojurewerkz.cassaforte.cql :as cql]
-            [clj-yaml.core :as yaml]
+            [scylla.distributions.fedorafromsource]
             )
   (:import (clojure.lang ExceptionInfo)
            (com.datastax.driver.core ConsistencyLevel)
            (com.datastax.driver.core.policies RetryPolicy
                                               RetryPolicy$RetryDecision)
-           (java.net InetAddress)))
+           ))
+
+(defn dns-resolve
+  [hostname]
+  (carly.core/dns-resolve hostname))
 
 (defn scaled
   "Applies a scaling factor to a number - used for durations
@@ -48,27 +53,10 @@
   (or (System/getenv "JEPSEN_COMPACTION_STRATEGY")
       "SizeTieredCompactionStrategy"))
 
-(defn compressed-commitlog?
-  "Returns whether to use commitlog compression"
-  []
-  (= (some-> (System/getenv "JEPSEN_COMMITLOG_COMPRESSION") (clojure.string/lower-case))
-     "false"))
-
 (defn coordinator-batchlog-disabled?
   "Returns whether to disable the coordinator batchlog for MV"
   []
   (boolean (System/getenv "JEPSEN_DISABLE_COORDINATOR_BATCHLOG")))
-
-(defn phi-level
-  "Returns the value to use for phi in the failure detector"
-  []
-  (or (System/getenv "JEPSEN_PHI_VALUE")
-      8))
-
-(defn disable-hints?
-  "Returns true if Jepsen tests should run without hints"
-  []
-  (not (System/getenv "JEPSEN_DISABLE_HINTS")))
 
 (defn wait-for-recovery
   "Waits for the driver to report all nodes are up"
@@ -80,11 +68,6 @@
            (while (->> (cassandra/get-hosts conn)
                        (map :is-up) and not)
              (Thread/sleep 500))))
-
-(defn dns-resolve
-  "Gets the address of a hostname"
-  [hostname]
-  (.getHostAddress (InetAddress/getByName (name hostname))))
 
 (defn live-nodes
   "Get the list of live nodes from a random node in the cluster"
@@ -145,76 +128,6 @@
        true
        (catch RuntimeException _ false)))
 
-(defn configure! [node test]
-  (info node "configuring ScyllaDB")
-  (let [config-path (->> test :scylla :config-path)
-        config (control/exec "cat" config-path)
-        seeds (-> test :nodes first dns-resolve)
-        commitlog-compression-options (when (compressed-commitlog?)
-                                          {:commitlog_compression 
-                                            [{:class_name "LZ4Compressor"}]})
-        new-config  (-> config
-                      yaml/parse-string
-                      (merge {:cluster_name "jepsen"
-                              :row_cache_size_in_mb 20
-                              :seed_provider 
-                                 [ { :class_name "org.apache.cassandra.locator.SimpleSeedProvider"
-                                     :parameters 
-                                          [{:seeds seeds}] 
-                                  }] 
-                              :listen_address (dns-resolve node)
-                              :rpc_address (dns-resolve node) 
-                              :internode_compression (str (disable-hints?))
-                              :commitlog_sync "batch"
-                              :commitlog_sync_batch_window_in_ms 1
-                              :commitlog_sync_preiod_in_ms 10000
-                              :phi_convict_threshold (phi-level)
-                              :auto_bootstrap (-> test :bootstrap deref node boolean) }
-
-                              commitlog-compression-options)
-                      (dissoc :commitlog_sync_period_in_ms)
-                      yaml/generate-string) ] 
-        (control/exec :echo new-config :> config-path)
-        (info node "configure! finished")))
-
-(def cpuset-counter (atom 0))
-(defn cpuset!
-  []
-  (let [CPUS_PER_CONTAINER 4
-        low (* CPUS_PER_CONTAINER @cpuset-counter)
-        high (+ low CPUS_PER_CONTAINER -1)]
-    (swap! cpuset-counter inc)
-    (str low "-" high)))
-
-(defn scylla-command!
-  [test]
-  (let [executable (->> test :scylla :executable)
-        config-path (->> test :scylla :config-path)]
-       [ executable
-         "--log-to-syslog" "0"
-         "--options-file"  config-path
-         "--log-to-stdout" "1"
-         "--default-log-level" "info"
-         "--network-stack" "posix"
-         "--memory" "8G"
-         "--collectd" "0"
-         "--poll-mode"
-         "--developer-mode" "1"
-         "--cpuset" (cpuset!) 
-         ">&" (:logfile test) "&"
-         ]  ))
-
-(defn start!
-  "Starts ScyllaDB"
-  [node test]
-  (info node "starting ScyllaDB")
-  (nemesis/set-time! 0)
-  (net/fast-force)
-  (control/exec "bash" "/tmp/go.sh")
-  (info node "Started scylla")
-  (meh (control/exec :service :scylla-jmx :start))
-  (info node "Started scylla-jmx"))
-
 (defn guarded-start!
   "Guarded start that only starts nodes that have joined the cluster already
   through initial DB lifecycle or a bootstrap. It will not start decommissioned
@@ -223,63 +136,7 @@
   (let [bootstrap (:bootstrap test)
         decommission (:decommission test)]
     (when-not (or (node @bootstrap) (->> node name dns-resolve (get decommission)))
-      (start! node test))))
-
-(defn stop!
-  "Stops ScyllaDB"
-  [node]
-  (info node "stopping ScyllaDB")
-  (meh (control/exec :pkill :scylla))
-  (while (.contains (control/exec :ps :-ef) "scylla")
-    (Thread/sleep 1000)
-    (info node "scylla is still running"))
-  (info node "has stopped ScyllaDB"))
-
-(defn wipe!
-  [node]
-  (stop! node)
-  (meh (control/exec :rm :-rf "/var/lib/scylla/"))
-  (info node "deleted data and log files"))
-
-(defn put-scylla-script [node test]
-  (let [command (scylla-command! test)]
-    (control/exec :echo command :> "/tmp/go.sh")))
-
-(defn hold-for-debug?
-  [node test]
-  (when (System/getenv "HOLD_AFTER_SETUP")
-    (when (= (->> test :nodes first) node)
-      (info node "HOLDING AFTER SETUP ")
-      (read-line))))
-
-(defn sleep-grace-period
-  [node]
-  (info node "sleep grace period")
-  (Thread/sleep 10000))
-
-(defn db
-  "New ScyllaDB run"
-  []
-  (reify db/DB
-    (setup! [_ test node]
-      (info node "SETUP")
-      (control/exec :dnf :install :sudo :-y)
-      (put-scylla-script node test)
-      (control/exec :rm :-f (:logfile test))
-      (wipe! node)
-      (configure! node test)
-      (start! node test)
-      (info node "SETUP DONE")
-      (hold-for-debug? node test)
-      (sleep-grace-period node))
-
-    (teardown! [_ test node]
-      (when-not (seq (System/getenv "LEAVE_CLUSTER_RUNNING"))
-          (wipe! node)))
-
-    db/LogFiles
-    (log-files [db test node]
-      [(:logfile test)])))
+      (scylla.instance/start! (:db test)))))
 
 (defn recover
   "A generator which stops the nemesis and allows some time for recovery."
@@ -430,15 +287,18 @@
                     (clojure.string/split #" "))]
       (mapv keyword node-names)))
 
+(defn start!
+  [node test]
+  (scylla.instance/start! (:db test)))
+
 (defn cassandra-test
   [name opts]
   (merge tests/noop-test
          {:name    (str "cassandra " name)
           :os      jepsen.os/noop
           :nodes   (get-nodes)
-          :logfile "/var/log/scylla.log"
           :ssh   {:username "root" :strict-host-key-checking false :private-key-path "private_key_rsa"}
-          :db      (db)
+          :db      (scylla.distributions.fedorafromsource/fedora-from-source)
           :bootstrap (atom #{})
           :decommission (atom #{})}
          opts))
