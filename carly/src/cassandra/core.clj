@@ -6,7 +6,6 @@
             [clojure.set :as set]
             [clojure.tools.logging :refer [debug info warn]]
             [jepsen [core      :as jepsen]
-             [os]
              [db        :as db]
              [util      :as util :refer [meh timeout]]
              [control   :as control :refer [| lit]]
@@ -253,9 +252,14 @@
       (info node "HOLDING AFTER SETUP ")
       (read-line))))
 
+(defn sleep-grace-period
+  [node]
+  (info node "sleep grace period")
+  (Thread/sleep 10000))
+
 (defn db
   "New ScyllaDB run"
-  [version]
+  []
   (reify db/DB
     (setup! [_ test node]
       (info node "SETUP")
@@ -266,7 +270,8 @@
       (configure! node test)
       (start! node test)
       (info node "SETUP DONE")
-      (hold-for-debug? node test))
+      (hold-for-debug? node test)
+      (sleep-grace-period node))
 
     (teardown! [_ test node]
       (when-not (seq (System/getenv "LEAVE_CLUSTER_RUNNING"))
@@ -433,7 +438,7 @@
           :nodes   (get-nodes)
           :logfile "/var/log/scylla.log"
           :ssh   {:username "root" :strict-host-key-checking false :private-key-path "private_key_rsa"}
-          :db      (db "2.1.8")
+          :db      (db)
           :bootstrap (atom #{})
           :decommission (atom #{})}
          opts))
