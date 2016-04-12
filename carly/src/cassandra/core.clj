@@ -27,6 +27,7 @@
             [clojurewerkz.cassaforte.policies :refer :all]
             [clojurewerkz.cassaforte.cql :as cql]
             [scylla.distributions.fedorafromsource]
+            [scylla.distributions.fedora22rpms]
             )
   (:import (clojure.lang ExceptionInfo)
            (com.datastax.driver.core ConsistencyLevel)
@@ -298,7 +299,7 @@
           :os      jepsen.os/noop
           :nodes   (get-nodes)
           :ssh   {:username "root" :strict-host-key-checking false :private-key-path "private_key_rsa"}
-          :db      (scylla.distributions.fedorafromsource/fedora-from-source)
+          :db      (scylla.distributions.fedora22rpms/factory (System/getenv "SCYLLA_REPO_URL"))
           :bootstrap (atom #{})
           :decommission (atom #{})}
          opts))
