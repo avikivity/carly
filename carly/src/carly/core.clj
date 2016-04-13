@@ -1,6 +1,7 @@
 (ns carly.core
   (:require [jepsen.control]
-            [clojure.walk])
+            [clojure.walk]
+            [clojure.tools.logging :as logging])
   (:import (java.net InetAddress)))
 
 (defn dns-resolve
@@ -59,3 +60,13 @@
          seq
          (map pair->argument)
          (clojure.string/join " "))))
+
+(defn lxd-containers-ips
+  []
+  (let [result (->>  (clojure.java.shell/sh "lxc" "list" "-c" "4")
+                     :out
+                     (re-seq #"(?m)\d+\.\d+\.\d+\.\d+")
+                     (map keyword)
+                     vec)]
+    (logging/info "found" (count result) "containers at" result)
+    result))

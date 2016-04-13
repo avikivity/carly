@@ -6,6 +6,7 @@
             [clojure.set :as set]
             [clojure.tools.logging :refer [debug info warn]]
             [carly.core]
+            [carly.setups]
             [jepsen [core      :as jepsen]
              [db        :as db]
              [util      :as util :refer [meh timeout]]
@@ -26,8 +27,6 @@
             [clojurewerkz.cassaforte.query :refer :all]
             [clojurewerkz.cassaforte.policies :refer :all]
             [clojurewerkz.cassaforte.cql :as cql]
-            [scylla.distributions.fedorafromsource]
-            [scylla.distributions.fedora22rpms]
             )
   (:import (clojure.lang ExceptionInfo)
            (com.datastax.driver.core ConsistencyLevel)
@@ -282,11 +281,7 @@
 
    (fn stop  [test node] (meh (guarded-start! node test)) [:restarted node])))
 
-(defn get-nodes
-  []
-  (let [node-names (-> (get (System/getenv) "NODES") 
-                    (clojure.string/split #" "))]
-      (mapv keyword node-names)))
+
 
 (defn start!
   [node test]
@@ -295,11 +290,9 @@
 (defn cassandra-test
   [name opts]
   (merge tests/noop-test
+         carly.setups/default
          {:name    (str "cassandra " name)
           :os      jepsen.os/noop
-          :nodes   (get-nodes)
-          :ssh   {:username "root" :strict-host-key-checking false :private-key-path "private_key_rsa"}
-          :db      (scylla.distributions.fedora22rpms/factory (System/getenv "SCYLLA_REPO_URL"))
           :bootstrap (atom #{})
           :decommission (atom #{})}
          opts))
