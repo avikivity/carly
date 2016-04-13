@@ -38,7 +38,7 @@
         (carly.core/transform-file "/etc/sysconfig/scylla-server" 
                (augment-command-line-arguments { :developer-mode "1"
                                                  :memory "8G"
-                                                 :cpuset (scylla.common/cpuset!)}))
+                                                 :cpuset (scylla.common/cpuset! node)}))
         (logging/info node "deleted data files")
         (let [config-path "/etc/scylla/scylla.yaml"]
           (scylla.instance/configure! node test config-path))

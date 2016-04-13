@@ -1,14 +1,21 @@
 (ns scylla.common
   (:require [clojure.tools.logging :as logging]))
 
-(def cpuset-counter (atom 0))
-(defn cpuset!
-  []
+(def cpu-allocation (atom {}))
+(defn allocate-cpus
+  [current-allocation node]
   (let [CPUS_PER_CONTAINER 4
-        low (* CPUS_PER_CONTAINER @cpuset-counter)
+        low (* CPUS_PER_CONTAINER (count current-allocation))
         high (+ low CPUS_PER_CONTAINER -1)]
-    (swap! cpuset-counter inc)
-    (str low "-" high)))
+    (->> (str low "-" high)
+         (assoc current-allocation node)))) 
+
+(defn cpuset!
+  [node]
+  (or (@cpu-allocation node)
+      (do
+        (swap! cpu-allocation allocate-cpus node)
+        (@cpu-allocation node))))
 
 (defn sleep-grace-period
   [node]
