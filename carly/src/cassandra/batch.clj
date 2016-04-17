@@ -3,6 +3,7 @@
   (:require [clojure [pprint :refer :all]
              [string :as str]
              [set :as set]]
+            [carly.utility]
             [clojure.java.io :as io]
             [clojure.tools.logging :refer [debug info warn]]
             [jepsen [core      :as jepsen]
@@ -119,7 +120,7 @@
   (let [cass_log_name "cassandra-stress.log"
         cass_log_tmp  (str "/tmp/" cass_log_name)
         cass_log_store (.getCanonicalPath (store/path! test cass_log_name))]
-    (sh "scylla-cassandra-stress" "write" "no-warmup" "duration=5m" "-rate" "threads=500" "-mode" "native" "cql3" "-node" (dns-resolve :n1) "-log" (str "file=" cass_log_tmp))
+    (sh "scylla-cassandra-stress" "write" "no-warmup" "duration=5m" "-rate" "threads=500" "-mode" "native" "cql3" "-node" (first (:nodes test)) "-log" (str "file=" cass_log_tmp))
     (info (str "Copying " cass_log_tmp " to " cass_log_store))
     (sh "cp" cass_log_tmp cass_log_store)))
 
@@ -166,31 +167,31 @@
 
 (def bridge-test-bootstrap
   (batch-set-test "bridge bootstrap"
-                  {:bootstrap (atom #{:n4 :n5})
+                  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
                                 :bootstrapper (conductors/bootstrapper)}}))
 
 (def halves-test-bootstrap
   (batch-set-test "halves bootstrap"
-                  {:bootstrap (atom #{:n4 :n5})
+                  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (nemesis/partition-random-halves)
                                 :bootstrapper (conductors/bootstrapper)}}))
 
 (def isolate-node-test-bootstrap
   (batch-set-test "isolate node bootstrap"
-                  {:bootstrap (atom #{:n4 :n5})
+                  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (nemesis/partition-random-node)
                                 :bootstrapper (conductors/bootstrapper)}}))
 
 (def crash-subset-test-bootstrap
   (batch-set-test "crash bootstrap"
-                  {:bootstrap (atom #{:n4 :n5})
+                  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (crash-nemesis)
                                 :bootstrapper (conductors/bootstrapper)}}))
 
 (def clock-drift-test-bootstrap
   (batch-set-test "clock drift bootstrap"
-                  {:bootstrap (atom #{:n4 :n5})
+                  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (nemesis/clock-scrambler 10000)
                                 :bootstrapper (conductors/bootstrapper)}}))
 

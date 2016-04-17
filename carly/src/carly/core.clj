@@ -70,3 +70,11 @@
                      vec)]
     (logging/info "found" (count result) "containers at" result)
     result))
+
+(defn choose
+  [k collection]
+  (let [size collection
+        result (atom #{})]
+    (while (< (count @result) k)
+      (swap! result (fn [old] (conj old (rand-nth collection)))))
+    @result))

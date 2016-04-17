@@ -135,25 +135,25 @@
 
 (def bridge-test-bootstrap
   (cql-set-test "bridge bootstrap"
-                {:bootstrap (atom #{:n4 :n5})
+                {:bootstrap (atom (carly.utility/node-subset 2))
                  :conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
                               :bootstrapper (conductors/bootstrapper)}}))
 
 (def halves-test-bootstrap
   (cql-set-test "halves bootstrap"
-                {:bootstrap (atom #{:n4 :n5})
+                {:bootstrap (atom (carly.utility/node-subset 2))
                  :conductors {:nemesis (nemesis/partition-random-halves)
                               :bootstrapper (conductors/bootstrapper)}}))
 
 (def isolate-node-test-bootstrap
   (cql-set-test "isolate node bootstrap"
-                {:bootstrap (atom #{:n4 :n5})
+                {:bootstrap (atom (carly.utility/node-subset 2))
                  :conductors {:nemesis (nemesis/partition-random-node)
                               :bootstrapper (conductors/bootstrapper)}}))
 
 (def crash-subset-test-bootstrap
   (cql-set-test "crash bootstrap"
-                {:bootstrap (atom #{:n4 :n5})
+                {:bootstrap (atom (carly.utility/node-subset 2))
                  :conductors {:nemesis (crash-nemesis)
                               :bootstrapper (conductors/bootstrapper)}}))
 

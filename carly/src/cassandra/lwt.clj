@@ -183,31 +183,31 @@
 
 (def bridge-test-bootstrap
   (cas-register-test "bridge bootstrap"
-                     {:bootstrap (atom #{:n4 :n5})
+                     {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
                                    :bootstrapper (conductors/bootstrapper)}}))
 
 (def halves-test-bootstrap
   (cas-register-test "halves bootstrap"
-                     {:bootstrap (atom #{:n4 :n5})
+                     {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (nemesis/partition-random-halves)
                                    :bootstrapper (conductors/bootstrapper)}}))
 
 (def isolate-node-test-bootstrap
   (cas-register-test "isolate node bootstrap"
-                     {:bootstrap (atom #{:n4 :n5})
+                     {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (nemesis/partition-random-node)
                                    :bootstrapper (conductors/bootstrapper)}}))
 
 (def crash-subset-test-bootstrap
   (cas-register-test "crash bootstrap"
-                     {:bootstrap (atom #{:n4 :n5})
+                     {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (crash-nemesis)
                                    :bootstrapper (conductors/bootstrapper)}}))
 
 (def clock-drift-test-bootstrap
   (cas-register-test "clock drift bootstrap"
-                     {:bootstrap (atom #{:n4 :n5})
+                     {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (nemesis/clock-scrambler 10000)
                                    :bootstrapper (conductors/bootstrapper)}}))
 
