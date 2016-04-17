@@ -1,0 +1,7 @@
+- hosts: nodes
+  tasks:
+      - name: "run the server"
+        service: name=scylla-server state=restarted
+
+      - name: "run the jmx"
+        service: name=scylla-jmx state=restarted
