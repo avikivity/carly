@@ -32,7 +32,7 @@
         (scylla.instance/wipe! self)
         (jepsen.control/exec :dnf :install :sudo :-y)
         (jepsen.control/exec :curl :-o "/etc/yum.repos.d/scylla.repo" repository-url)
-        (jepsen.control/exec :dnf :install :scylla-server :scylla-jmx :scylla-tools :-y)
+        (jepsen.control/exec :dnf :install :scylla-server :scylla-jmx :scylla-tools :-y :libfaketime)
         (jepsen.control/exec :mkdir :-p "/var/lib/scylla")
         (jepsen.control/exec :chown "scylla.scylla" "/var/lib/scylla")
         (carly.core/transform-file "/etc/sysconfig/scylla-server" 
