@@ -4,6 +4,7 @@
              [string :as str]
              [set :as set]]
             [carly.utility]
+            [carly.setups]
             [clojure.java.io :as io]
             [clojure.tools.logging :refer [debug info warn]]
             [jepsen [core      :as jepsen]
@@ -119,8 +120,12 @@
   [test]
   (let [cass_log_name "cassandra-stress.log"
         cass_log_tmp  (str "/tmp/" cass_log_name)
-        cass_log_store (.getCanonicalPath (store/path! test cass_log_name))]
-    (sh "scylla-cassandra-stress" "write" "no-warmup" "duration=5m" "-rate" "threads=500" "-mode" "native" "cql3" "-node" (first (:nodes test)) "-log" (str "file=" cass_log_tmp))
+        cass_log_store (.getCanonicalPath (store/path! test cass_log_name))
+        shell-arguments [(carly.setups/default :cassandra-stress-executable) "write" "no-warmup" "duration=5m" "-rate" "threads=500" "-mode" "native" "cql3" "-node" (dns-resolve (first (:nodes test))) "-log" (str "file=" cass_log_tmp)]
+        ]
+    
+    (info "running stress test:" shell-arguments)
+    (apply sh shell-arguments)
     (info (str "Copying " cass_log_tmp " to " cass_log_store))
     (sh "cp" cass_log_tmp cass_log_store)))
 
