@@ -1,6 +1,7 @@
 (ns cassandra.collections.map
   (:require [clojure [pprint :refer :all]
              [string :as str]]
+            [carly.utility]
             [clojure.java.io :as io]
             [clojure.tools.logging :refer [debug info warn]]
             [jepsen [core      :as jepsen]
