@@ -19,3 +19,5 @@
 
 (deftest null-test
   (run-test! (cassandra-test nil {})))
+(deftest null-test-2
+  (run-test! (cassandra-test nil {})))
