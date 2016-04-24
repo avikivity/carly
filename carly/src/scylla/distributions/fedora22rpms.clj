@@ -37,33 +37,58 @@
     (jepsen.control/exec :dnf :install :scylla-server :scylla-jmx :scylla-tools :-y)
     (swap! installed (fn [old] (conj old node)))))
 
+(def timestamps (atom {}))
+(defn record-time
+  [label node]
+  (let [time-string (jepsen.control/exec :date :-u "+%F %T")
+        new-times (-> (node @timestamps)
+                      (merge {})
+                      (merge {label time-string}))]
+    (logging/info node label "@" time-string)
+    (swap! timestamps
+           (fn [old]
+             (merge old {node new-times})))))
+
+(defn create-logs!
+  [node]
+  (let [{start :start finish :finish} (node @timestamps)
+        LOG_FILE  "/tmp/scylla.log"]
+    (logging/info node "writing logs to " LOG_FILE start "-" finish)
+    (jepsen.control/exec :journalctl :-u "scylla-server" :--since start :--until finish :> LOG_FILE)
+    [LOG_FILE]))
+
 (defn factory
   [repository-url]
   (reify
     jepsen.db/DB
-      (setup! [self test node]
-        (logging/info node "SETUP")
-        (scylla.instance/wipe! self)
-        (jepsen.control/exec :dnf :install :sudo :libfaketime :psmisc :-y)
-        (install-scylla-rpms! repository-url node)
-        (jepsen.control/exec :mkdir :-p "/var/lib/scylla")
-        (jepsen.control/exec :chown "scylla.scylla" "/var/lib/scylla")
-        (carly.core/transform-file "/etc/sysconfig/scylla-server"
-               (augment-command-line-arguments { :developer-mode "1"
-                                                 :memory "8G"
-                                                 :cpuset (scylla.common/cpuset! node)}))
-        (logging/info node "deleted data files")
-        (let [config-path "/etc/scylla/scylla.yaml"]
-          (scylla.instance/configure! node test config-path))
-        (jepsen.nemesis/set-time! 0)
-        (jepsen.control.net/fast-force)
-        (scylla.instance/start! self)
-        (scylla.common/sleep-grace-period node)
-        (logging/info node "SETUP DONE"))
+    (setup! [self test node]
+      (logging/info node "setup")
+      (scylla.instance/wipe! self)
+      (jepsen.control/exec :dnf :install :sudo :libfaketime :psmisc :-y)
+      (install-scylla-rpms! repository-url node)
+      (jepsen.control/exec :mkdir :-p "/var/lib/scylla")
+      (jepsen.control/exec :chown "scylla.scylla" "/var/lib/scylla")
+      (carly.core/transform-file "/etc/sysconfig/scylla-server"
+                                 (augment-command-line-arguments { :developer-mode "1"
+                                                                  :memory "8G"
+                                                                  :cpuset (scylla.common/cpuset! node)}))
+      (logging/info node "deleted data files")
+      (let [config-path "/etc/scylla/scylla.yaml"]
+        (scylla.instance/configure! node test config-path))
+      (jepsen.nemesis/set-time! 0)
+      (jepsen.control.net/fast-force)
+      (record-time :start node)
+      (scylla.instance/start! self)
+      (scylla.common/sleep-grace-period node)
+      (logging/info node "setup done"))
 
       (teardown! [self test node]
-        (when-not (seq (System/getenv "LEAVE_CLUSTER_RUNNING"))
-            (scylla.instance/wipe! self)))
+        (record-time :finish node)
+        (scylla.instance/wipe! self))
+
+    jepsen.db/LogFiles
+    (log-files [db test node]
+      (create-logs! node))
 
     scylla.instance/Instance
       (run-stop-command! [instance]
