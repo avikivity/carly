@@ -18,6 +18,6 @@
     (is (:valid? (:results test)))))
 
 (deftest null-test
-  (run-test! (cassandra-test nil {})))
+  (run-test! (cassandra-test "do-nothing" {})))
 (deftest null-test-2
-  (run-test! (cassandra-test nil {})))
+  (run-test! (cassandra-test "do-nothing-2" {})))
