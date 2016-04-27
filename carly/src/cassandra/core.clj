@@ -7,6 +7,7 @@
             [clojure.tools.logging :refer [debug info warn]]
             [carly.core]
             [carly.setups]
+            [scylla.checkers]
             [jepsen [core      :as jepsen]
              [db        :as db]
              [util      :as util :refer [meh timeout]]
@@ -296,6 +297,8 @@
           :os      jepsen.os/noop
           :bootstrap (atom #{})
           :decommission (atom #{})
-          :checker (checker/compose {:set checker/set})
+          :checker (checker/compose
+                     { :set checker/set
+                       :verify-scylla-lives scylla.checkers/verify-scylla-lives })
          }
          opts))
