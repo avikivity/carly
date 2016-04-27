@@ -141,8 +141,7 @@
                                            std-gen)
                                       (gen/delay 65
                                                  (read-once)))
-                          :checker (checker/compose
-                                    {:set checker/set})})
+                          })
          (merge-with merge {:conductors {:replayer (conductors/replayer)}} opts)))
 
 ;; iptables based tests

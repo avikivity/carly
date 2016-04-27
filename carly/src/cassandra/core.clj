@@ -291,8 +291,11 @@
   [name opts]
   (merge tests/noop-test
          carly.setups/default
-         {:name    (str "cassandra " name)
+         {
+          :name    (str "cassandra " name)
           :os      jepsen.os/noop
           :bootstrap (atom #{})
-          :decommission (atom #{})}
+          :decommission (atom #{})
+          :checker (checker/compose {:set checker/set})
+         }
          opts))

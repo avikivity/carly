@@ -102,7 +102,8 @@
 (defn cql-set-test
   [name opts]
   (merge (cassandra-test (str "cql set " name)
-                         {:client (cql-set-client)
+                         {
+                          :client (cql-set-client)
                           :model (model/set)
                           :generator (gen/phases
                                       (->> (adds)
@@ -110,8 +111,7 @@
                                            (gen/delay 1/2)
                                            std-gen)
                                       (read-once))
-                          :checker (checker/compose
-                                    {:set checker/set})})
+                          })
          opts))
 
 (def bridge-test

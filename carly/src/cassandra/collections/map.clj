@@ -99,7 +99,8 @@
 (defn cql-map-test
   [name opts]
   (merge (cassandra-test (str "cql map " name)
-                         {:client (cql-map-client)
+                         {
+                          :client (cql-map-client)
                           :model (model/set)
                           :generator (gen/phases
                                       (->> (adds)
@@ -107,8 +108,7 @@
                                            (gen/delay 1/2)
                                            std-gen)
                                       (read-once))
-                          :checker (checker/compose
-                                    {:set checker/set})})
+                          })
          opts))
 
 (def bridge-test
