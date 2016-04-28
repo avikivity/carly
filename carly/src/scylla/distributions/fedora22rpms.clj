@@ -83,8 +83,7 @@
       (logging/info node "setup done"))
 
       (teardown! [self test node]
-        (record-time :finish node)
-        (scylla.instance/wipe! self))
+        (record-time :finish node))
 
     jepsen.db/LogFiles
     (log-files [db test node]
