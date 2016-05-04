@@ -145,17 +145,23 @@
          (merge-with merge {:conductors {:replayer (conductors/replayer)}} opts)))
 
 ;; iptables based tests
-(def bridge-test
+(defn bridge-test
+  [opts]
   (batch-set-test "bridge"
-                  {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))}}))
+           (merge {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))}}
+                  opts)))
 
-(def halves-test
+(defn halves-test
+  [opts]
   (batch-set-test "halves"
-                  {:conductors {:nemesis (nemesis/partition-random-halves)}}))
+           (merge {:conductors {:nemesis (nemesis/partition-random-halves)}}
+                  opts)))
 
-(def isolate-node-test
+(defn isolate-node-test
+  [opts]
   (batch-set-test "isolate node"
-                  {:conductors {:nemesis (nemesis/partition-random-node)}}))
+           (merge {:conductors {:nemesis (nemesis/partition-random-node)}}
+                  opts)))
 
 (def crash-subset-test
   (batch-set-test "crash"
@@ -169,29 +175,37 @@
   (batch-set-test "flush and compact"
                   {:conductors {:nemesis (conductors/flush-and-compacter)}}))
 
-(def bridge-test-bootstrap
+(defn bridge-test-bootstrap
+  [opts]
   (batch-set-test "bridge bootstrap"
-                  {:bootstrap (atom (carly.utility/node-subset 2))
+          (merge  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
-                                :bootstrapper (conductors/bootstrapper)}}))
+                                :bootstrapper (conductors/bootstrapper)}}
+             opts)))
 
-(def halves-test-bootstrap
+(defn halves-test-bootstrap
+  [opts]
   (batch-set-test "halves bootstrap"
-                  {:bootstrap (atom (carly.utility/node-subset 2))
+          (merge  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (nemesis/partition-random-halves)
-                                :bootstrapper (conductors/bootstrapper)}}))
+                                :bootstrapper (conductors/bootstrapper)}}
+             opts)))
 
-(def isolate-node-test-bootstrap
+(defn isolate-node-test-bootstrap
+  [opts]
   (batch-set-test "isolate node bootstrap"
-                  {:bootstrap (atom (carly.utility/node-subset 2))
+          (merge  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (nemesis/partition-random-node)
-                                :bootstrapper (conductors/bootstrapper)}}))
+                                :bootstrapper (conductors/bootstrapper)}}
+             opts)))
 
-(def crash-subset-test-bootstrap
+(defn crash-subset-test-bootstrap
+  [opts]
   (batch-set-test "crash bootstrap"
-                  {:bootstrap (atom (carly.utility/node-subset 2))
+          (merge  {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (crash-nemesis)
-                                :bootstrapper (conductors/bootstrapper)}}))
+                                :bootstrapper (conductors/bootstrapper)}}
+             opts)))
 
 (def clock-drift-test-bootstrap
   (batch-set-test "clock drift bootstrap"
@@ -199,20 +213,26 @@
                    :conductors {:nemesis (nemesis/clock-scrambler 10000)
                                 :bootstrapper (conductors/bootstrapper)}}))
 
-(def bridge-test-decommission
+(defn bridge-test-decommission
+  [opts]
   (batch-set-test "bridge decommission"
-                  {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
-                                :decommissioner (conductors/decommissioner)}}))
+           (merge {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
+                                :decommissioner (conductors/decommissioner)}}
+                  opts)))
 
-(def halves-test-decommission
+(defn halves-test-decommission
+  [opts]
   (batch-set-test "halves decommission"
-                  {:conductors {:nemesis (nemesis/partition-random-halves)
-                                :decommissioner (conductors/decommissioner)}}))
+           (merge {:conductors {:nemesis (nemesis/partition-random-halves)
+                                :decommissioner (conductors/decommissioner)}}
+                  opts)))
 
-(def isolate-node-test-decommission
+(defn isolate-node-test-decommission
+  [opts]
   (batch-set-test "isolate node decommission"
-                  {:conductors {:nemesis (nemesis/partition-random-node)
-                                :decommissioner (conductors/decommissioner)}}))
+           (merge {:conductors {:nemesis (nemesis/partition-random-node)
+                                :decommissioner (conductors/decommissioner)}}
+                  opts)))
 
 (def crash-subset-test-decommission
   (batch-set-test "crash decommission"
@@ -225,17 +245,16 @@
                                 :decommissioner (conductors/decommissioner)}}))
 
 (def crash-subset-test-bootstrap-stress
-  (merge crash-subset-test-bootstrap
-    {:sidekick run-cassandra-stress
-     :name (str (:name crash-subset-test-bootstrap) " stress")}))
+  (let [my_test (crash-subset-test-bootstrap {:sidekick run-cassandra-stress})]
+     (assoc my_test :name (str (:name my_test) " stress"))))
 
 ;; tc-slow-net based tests
 (defn slow-net-test
   [test]
-  (merge test {
-        :net Net/tc-slow-net
-        :sidekick run-cassandra-stress
-        :name (str (:name test) " slow network")}))
+    (let [my_test (test {
+                  :net Net/tc-slow-net
+                  :sidekick run-cassandra-stress})]
+      (assoc my_test :name (str (:name my_test) " slow network"))))
 
 
 (def bridge-test-slow-net
