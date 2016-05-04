@@ -296,6 +296,7 @@
           :name    (str "cassandra " name)
           :os      jepsen.os/noop
           :bootstrap (atom #{})
+          :bootstrapped (atom #{})
           :decommission (atom #{})
           :checker (checker/compose
                      { :set checker/set

@@ -14,11 +14,15 @@
         (let  [pgrep (clj-ssh.ssh/ssh session  {:cmd "pgrep scylla"})]
           (= 0 (:exit pgrep)))))))
 
+(intern 'jepsen.store 'nonserializable-keys  (conj  jepsen.store/nonserializable-keys :bootstrapped))
+
 (def verify-scylla-lives
   (reify jepsen.checker/Checker
     (check  [self test model history]
-      (let [status (->> test
+      (let [bootstrapped? (:bootstrapped test)
+            status (->> test
                         :nodes
+                        (remove @bootstrapped?)
                         (map (fn [host] [host (scylla-running! host)])))
             valid (every? second status)]
             { :valid? valid
