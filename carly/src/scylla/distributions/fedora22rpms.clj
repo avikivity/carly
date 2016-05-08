@@ -82,18 +82,18 @@
       (scylla.common/sleep-grace-period node)
       (logging/info node "setup done"))
 
-      (teardown! [self test node]
-        (record-time :finish node))
+    (teardown! [self test node]
+      (record-time :finish node))
 
     jepsen.db/LogFiles
     (log-files [db test node]
       (create-logs! node))
 
     scylla.instance/Instance
-      (run-stop-command! [instance]
-        (jepsen.util/meh (jepsen.control/exec :systemctl :stop :scylla-jmx))
-        (jepsen.util/meh (jepsen.control/exec :systemctl :stop :scylla-server)))
+    (run-stop-command! [instance]
+      (jepsen.util/meh (jepsen.control/exec :systemctl :stop :scylla-jmx))
+      (jepsen.util/meh (jepsen.control/exec :systemctl :stop :scylla-server)))
 
-      (start!  [instance]
-        (jepsen.control/exec :systemctl :start :scylla-server)
-        (jepsen.control/exec :systemctl :start :scylla-jmx))))
+    (start!  [instance]
+      (jepsen.control/exec :systemctl :start :scylla-server)
+      (jepsen.control/exec :systemctl :start :scylla-jmx))))
