@@ -11,4 +11,16 @@
                  [jkni/jepsen "0.0.7-SNAPSHOT"] ]
   :plugins      [ [test2junit "1.2.2"] ]
   :test2junit-output-dir "junit-report"
-  :test2junit-run-ant true)
+  :test2junit-run-ant true
+  :test-selectors {:steady :steady
+                   :bootstrap :bootstrap
+                   :map :map
+                   :set :set
+                   :mv :mv
+                   :batch :batch
+                   :lwt :lwt
+                   :decommission :decommission
+                   :counter :counter
+                   :clock :clock
+                   :slow-network :slow-network
+                   :all (constantly true)})
