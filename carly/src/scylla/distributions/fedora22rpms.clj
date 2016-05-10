@@ -1,6 +1,7 @@
 (ns scylla.distributions.fedora22rpms
   (:require [scylla.instance]
             [scylla.common]
+            [carly.hooks]
             [jepsen.db]
             [jepsen.util]
             [jepsen.control]
@@ -62,8 +63,9 @@
   (reify
     jepsen.db/DB
     (setup! [self test node]
-      (logging/info node "setup")
       (scylla.instance/wipe! self)
+      (carly.hooks/wait-for-all-nodes-ready)
+      (logging/info node "setup")
       (jepsen.control/exec :dnf :install :sudo :libfaketime :psmisc :-y)
       (install-scylla-rpms! repository-url node)
       (jepsen.control/exec :mkdir :-p "/var/lib/scylla")

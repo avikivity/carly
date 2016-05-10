@@ -2,6 +2,7 @@
   (:require [jepsen.util]
             [jepsen.control :refer [*host*]]
             [carly.core]
+            [carly.hooks]
             [clj-yaml.core :as yaml]
             [clojure.tools.logging :as logging]))
 
@@ -42,13 +43,14 @@
   (log-paths [instance]))
 
 (defn stop!  [instance]
-  (logging/info *host* "stopping ScyllaDB")
+  (logging/info *host* "will stop scylla")
   (run-stop-command! instance) 
   (while (.contains (jepsen.control/exec :ps :-ef) "scylla")
     (Thread/sleep 1000)
     (logging/info *host* "scylla is still running"))
-  (logging/info *host* "has stopped ScyllaDB"))
+  (logging/info *host* "has stopped scylla"))
 
 (defn wipe!  [instance]
   (stop! instance)
-  (jepsen.util/meh (jepsen.control/exec :rm :-rf "/var/lib/scylla/")))
+  (jepsen.util/meh (jepsen.control/exec :rm :-rf "/var/lib/scylla/"))
+  (carly.hooks/signal-ready! *host*))

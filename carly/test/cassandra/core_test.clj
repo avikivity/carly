@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer [pprint]]
             [cassandra.core :refer :all]
+            [carly.hooks]
             [jepsen [core :as jepsen]
              [report :as report]]))
 
@@ -9,8 +10,9 @@
 (defn run-test!
   [test]
   (flush) ; Make sure nothing buffered
-  (let [test (jepsen/run! test)]
-    (is (:valid? (:results test)))))
+  (carly.hooks/start! test)
+  (let [test-run (jepsen/run! test)]
+    (is (:valid? (:results test-run)))))
 
 (deftest null-test
   (run-test! (cassandra-test "do-nothing" {})))
