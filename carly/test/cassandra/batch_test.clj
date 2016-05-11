@@ -36,7 +36,7 @@
   (run-test! (halves-test-bootstrap nil)))
 
 (deftest ^:batch ^:bootstrap batch-crash-subset-bootstrap
-  (run-test! crash-subset-test-bootstrap))
+  (run-test! (crash-subset-test-bootstrap nil)))
 
 (deftest ^:clock batch-clock-drift-bootstrap
   (run-test! clock-drift-test-bootstrap))
