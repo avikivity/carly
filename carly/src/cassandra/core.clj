@@ -294,7 +294,6 @@
          carly.setups/default
          {
           :name    (str "cassandra " name)
-          :os      jepsen.os/noop
           :bootstrap (atom #{})
           :bootstrapped (atom #{})
           :decommission (atom #{})
