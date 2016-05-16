@@ -22,7 +22,8 @@
                            (cassandra/joining-nodes test))
                 (info node "still joining")
                 (Thread/sleep 1000))
-              (assoc op :value (str node " bootstrapped")))
+              (assoc op :value (str node " bootstrapped"))
+              (swap! (:bootstrapped test) conj node))
           (assoc op :value "no nodes left to bootstrap"))))
     (teardown! [this test] this)))
 
