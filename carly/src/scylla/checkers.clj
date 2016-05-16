@@ -1,5 +1,6 @@
 (ns scylla.checkers
     (:require [jepsen.checker]
+              [clojure.tools.logging :as logging]
               [clj-ssh.ssh]))
 
 (defn scylla-running!
@@ -19,6 +20,7 @@
 (def verify-scylla-lives
   (reify jepsen.checker/Checker
     (check  [self test model history]
+      (logging/info "verifying scyllas are alive. bootstrapped nodes are" @(:bootstrapped test))
       (let [bootstrapped? (:bootstrapped test)
             status (->> test
                         :nodes
