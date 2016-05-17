@@ -1,0 +1,7 @@
+- hosts: nodes
+  tasks:
+      - name: "stop the server"
+        service: name=scylla-server state=stopped
+
+      - name: "stop the jmx"
+        service: name=scylla-jmx state=stopped
