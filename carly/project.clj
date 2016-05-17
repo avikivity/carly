@@ -23,4 +23,6 @@
                    :counter :counter
                    :clock :clock
                    :slow-network :slow-network
+                   :sanity :sanity
+                   :no-bootstrap (complement :bootstrap)
                    :all (constantly true)})

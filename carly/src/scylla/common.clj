@@ -20,4 +20,4 @@
 (defn sleep-grace-period
   [node]
   (logging/info node "sleep grace period")
-  (Thread/sleep 10000))
+  (Thread/sleep 20000))
