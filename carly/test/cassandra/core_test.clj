@@ -17,7 +17,7 @@
   (let [test-run (jepsen/run! test)]
     (is (:valid? (:results test-run)))))
 
-(deftest null-test
+(deftest ^:sanity null-test
   (run-test! 
     (cassandra-test
       "sanity check" 
