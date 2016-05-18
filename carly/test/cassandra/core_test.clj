@@ -4,6 +4,7 @@
             [cassandra.core :refer :all]
             [cassandra.batch]
             [carly.hooks]
+            [carly.hacks]
             [carly.checkers]
             [jepsen [core :as jepsen]
              [generator]
