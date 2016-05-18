@@ -24,5 +24,11 @@
                    :clock :clock
                    :slow-network :slow-network
                    :sanity :sanity
-                   :no-bootstrap (complement :bootstrap)
+                   :no-bootstrap (fn
+                                   [metadata]
+                                   (->> metadata
+                                       :name
+                                       str
+                                       (re-find #"bootstrap")
+                                       not))
                    :all (constantly true)})
