@@ -4,7 +4,9 @@
             [cassandra.core :refer :all]
             [cassandra.batch]
             [carly.hooks]
+            [carly.hacks]
             [carly.checkers]
+            [clojure.tools.logging :as logging]
             [jepsen [core :as jepsen]
              [generator]
              [report :as report]]))
@@ -13,9 +15,11 @@
 (defn run-test!
   [test]
   (flush) ; Make sure nothing buffered
-  (carly.hooks/start! test)
-  (let [test-run (jepsen/run! test)]
-    (is (:valid? (:results test-run)))))
+  (if (System/getenv "JUST_LIST")
+    (logging/info (:name test))
+    (do (carly.hooks/start! test)
+        (let [test-run (jepsen/run! test)]
+          (is (:valid? (:results test-run)))))))
 
 (deftest ^:sanity null-test
   (run-test! 
