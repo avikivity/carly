@@ -6,6 +6,7 @@
             [jepsen.util]
             [jepsen.control]
             [jepsen.nemesis]
+            [jepsen.store]
             [jepsen.control.net]
             [clojure.tools.logging :as logging]
             [carly.core]))
@@ -85,11 +86,10 @@
       (logging/info node "setup done"))
 
     (teardown! [self test node]
-      (record-time :finish node))
-
-    jepsen.db/LogFiles
-    (log-files [db test node]
-      (create-logs! node))
+      (record-time :finish node)
+      (let [logfile (create-logs! node)
+            local-store (str (jepsen.store/path! test (name node) "scylla.log")) ]
+        (jepsen.control/download logfile local-store)))
 
     scylla.instance/Instance
     (run-stop-command! [instance]
