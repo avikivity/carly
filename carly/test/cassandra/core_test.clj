@@ -16,12 +16,12 @@
   [test]
   (flush) ; Make sure nothing buffered
   (if (System/getenv "JUST_LIST")
-    (logging/info (:name test))
+    (logging/info (carly.hacks/testing-metadata-name))
     (do (carly.hooks/start! test)
         (let [test-run (jepsen/run! test)]
           (is (:valid? (:results test-run)))))))
 
-(deftest ^:sanity null-test
+(deftest ^:sanity sanity-check
   (run-test! 
     (cassandra-test
       "sanity check" 

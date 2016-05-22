@@ -1,6 +1,8 @@
 (ns carly.hacks
   (:require
     [clojure.tools.logging :as logging]
+    [clojure.test]
+    [jepsen.core]
     [jepsen.store]))
 
 (defmacro saferun
@@ -22,16 +24,31 @@
        dorun)
   test)
 
-(def original-snarf-logs! jepsen.core/snarf-logs!)
+(defn testing-metadata-name
+  []
+  (->> clojure.test/*testing-vars*
+       first
+       meta
+       :name
+       str))
 
+(def original-snarf-logs! jepsen.core/snarf-logs!)
 (defn safe-snarf-logs!
   [test]
   (saferun (original-snarf-logs! test)))
+
+(def original-store-path jepsen.store/path)
+(defn path-use-test-metadata-for-test-name
+  [test & args]
+  (let [name (testing-metadata-name)
+        new-args (conj args (assoc test :name name))]
+    (apply original-store-path new-args)))
 
 (defn hack
   [namespace symbol value]
   (logging/info "hack: replacing" (str namespace "/" symbol))
   (intern namespace symbol value))
 
+(hack 'jepsen.store 'path path-use-test-metadata-for-test-name)
 (hack 'jepsen.store 'save! hack-save!)
 (hack 'jepsen.core 'snarf-logs! safe-snarf-logs!)
