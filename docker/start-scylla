@@ -1,0 +1,16 @@
+#!/bin/sh
+
+IP=$(hostname -i)
+sed -e "s/seeds:.*/seeds: $IP/g" /var/lib/scylla/conf/scylla.yaml > $HOME/scylla.yaml
+/usr/bin/scylla --log-to-syslog 1 \
+                --log-to-stdout 0 \
+                --developer-mode true \
+                --default-log-level info \
+                --options-file $HOME/scylla.yaml \
+                --listen-address $IP \
+                --rpc-address $IP \
+                --network-stack posix &> /dev/null &
+
+source /etc/sysconfig/scylla-jmx
+export SCYLLA_HOME SCYLLA_CONF
+exec /usr/lib/scylla/jmx/scylla-jmx -l /usr/lib/scylla/jmx &> /dev/null &
