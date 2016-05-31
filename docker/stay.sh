@@ -6,8 +6,7 @@ _die() {
     exit -1
 }
 
-sudo /usr/sbin/sshd -h /host_rsa || _die "sshd error"
-/start-scylla || _die "scylla error"
+/usr/sbin/sshd -h /host_rsa || _die "sshd error"
 
 while true; do
     sleep 1m
