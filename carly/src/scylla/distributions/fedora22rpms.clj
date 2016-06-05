@@ -59,6 +59,10 @@
     (jepsen.control/exec :journalctl :-u "scylla-server" :--since start :--until finish :> LOG_FILE)
     [LOG_FILE]))
 
+(defn first-teardown?
+  [node]
+  (not (->> @timestamps node :start)))
+
 (defn factory
   [repository-url]
   (reify
@@ -86,10 +90,11 @@
       (logging/info node "setup done"))
 
     (teardown! [self test node]
-      (record-time :finish node)
-      (let [logfile (create-logs! node)
-            local-store (str (jepsen.store/path! test (name node) "scylla.log")) ]
-        (jepsen.control/download logfile local-store)))
+      (when-not (first-teardown? node)
+        (record-time :finish node)
+        (let [logfile (create-logs! node)
+              local-store (str (jepsen.store/path! test (name node) "scylla.log")) ]
+          (jepsen.control/download logfile local-store))))
 
     scylla.instance/Instance
     (run-stop-command! [instance]
