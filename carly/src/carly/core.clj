@@ -4,6 +4,14 @@
             [clojure.tools.logging :as logging])
   (:import (java.net InetAddress)))
 
+(defn shell!
+  [& arguments]
+  (let [arguments (map name arguments)
+        result (apply clojure.java.shell/sh arguments)]
+    (if-not (= 0  (:exit result))
+       (throw (Exception. (str "command failed! '" (clojure.string/join " " arguments) "' " result)))
+       result)))
+
 (defn dns-resolve
   [hostname]
   (.getHostAddress (InetAddress/getByName (name hostname))))
