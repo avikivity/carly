@@ -13,3 +13,9 @@ leiningen: home_bin
 scylladb-jepsen: leiningen
 	git clone https://github.com/scylladb/jepsen --branch carly_oriented ~/scylladb-jepsen
 	cd ~/scylladb-jepsen/jepsen ; $(LEIN) install
+
+install-docker:
+	which docker || curl -fsSL https://get.docker.com/ | sh
+	sudo usermod -aG docker $(USER)
+	sudo systemctl start docker
+	@echo YOU MUST LOGIN AGAIN NOW SO THAT YOU CAN USE DOCKER
