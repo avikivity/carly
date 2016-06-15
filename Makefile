@@ -1,4 +1,4 @@
-all: scylladb-jepsen
+all: scylladb-jepsen carly-check
 HOME_BIN=~/bin
 LEIN=$(HOME_BIN)/lein
 
@@ -19,3 +19,8 @@ install-docker:
 	sudo usermod -aG docker $(USER)
 	sudo systemctl start docker
 	@echo YOU MUST LOGIN AGAIN NOW SO THAT YOU CAN USE DOCKER
+
+carly-dependencies:
+	cd carly ; $(LEIN) deps
+
+carly-check: carly-dependencies
