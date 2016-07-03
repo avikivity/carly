@@ -8,9 +8,11 @@
 (def HOW-MANY 5)
 
 (defn docker!
-  [command containers]
-  (->> (concat [:docker command] containers)
-       (apply core/shell!)))
+  [& arguments]
+  (let [docker-args (butlast arguments)
+        containers (last arguments) ]
+    (->> (concat [:docker] docker-args containers)
+         (apply core/shell!))))
 
 (defn container-names
   []
@@ -43,8 +45,7 @@
   (let [current-containers (container-names)]
     (when-not (empty? current-containers)
       (logging/info "destroy containers:" current-containers)
-      (docker! :stop current-containers)
-      (docker! :rm :--volumes current-containers))))
+      (docker! :rm :-f :--volumes current-containers))))
 
 (defn setup!
   [test]
