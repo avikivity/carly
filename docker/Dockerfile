@@ -1,4 +1,4 @@
-FROM scylla_latest
+FROM scylladb/scylla
 MAINTAINER Yoav Kleinberger <yoav@scylladb.com>
 
 USER root
@@ -17,4 +17,4 @@ RUN systemctl enable sshd
 EXPOSE 22
 
 # fix sudoers
-RUN sed -i -e 's/Defaults.*requiretty//' /etc/sudoers 
+ADD sudoers /etc/sudoers 

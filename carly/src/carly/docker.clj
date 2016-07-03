@@ -49,7 +49,7 @@
 (defn setup!
   [test]
   (destroy-containers!)
-  (build-containers! HOW-MANY "haarcuba/fromscylla:v2")
+  (build-containers! HOW-MANY "haarcuba/fromscylla:p2")
   (Thread/sleep 5000)
   (test))
 
