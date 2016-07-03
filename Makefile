@@ -2,6 +2,8 @@ all: scylladb-jepsen carly-check
 HOME_BIN=~/bin
 LEIN=$(HOME_BIN)/lein
 
+from_scratch: scylladb-jepsen carly-check scylla-tools-java generate-keys
+
 home_bin:
 	mkdir -p $(HOME_BIN)
 
@@ -22,5 +24,15 @@ install-docker:
 
 carly-dependencies:
 	cd carly ; $(LEIN) deps
+
+scylla-tools-java:
+	cd ~ ; git clone https://github.com/scylladb/scylla-tools-java.git
+	cd ~/scylla-tools-java ; ant
+
+generate-keys:
+	cd carly ; rm -f public_key_rsa private_key_rsa
+	cd carly ; ssh-keygen -f jepsen_key -N ''
+	cd carly ; mv jepsen_key private_key_rsa
+	cd carly ; mv jepsen_key.pub public_key_rsa
 
 carly-check: carly-dependencies

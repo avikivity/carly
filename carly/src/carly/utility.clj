@@ -4,4 +4,5 @@
 
 (defn node-subset
   [size]
-  (core/choose size (setups/default :nodes)))
+  (let [default-setup (setups/default)]
+    (core/choose size (default-setup :nodes))))

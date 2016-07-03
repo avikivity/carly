@@ -256,81 +256,97 @@
                                              (extra-checker/ec-history->latencies 3))})})))
 
 ;; Uncontended tests
-(def bridge-test
+(defn bridge-test
+  []
   (mv-map-test "bridge"
                {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))}}))
 
-(def halves-test
+(defn halves-test
+  []
   (mv-map-test "halves"
                {:conductors {:nemesis (nemesis/partition-random-halves)}}))
 
-(def isolate-node-test
+(defn isolate-node-test
+  []
   (mv-map-test "isolate node"
                {:conductors {:nemesis (nemesis/partition-random-node)}}))
 
-(def crash-subset-test
+(defn crash-subset-test
+  []
   (mv-map-test "crash"
                {:conductors {:nemesis (crash-nemesis)}}))
 
-(def clock-drift-test
+(defn clock-drift-test
+  []
   (mv-map-test "clock drift"
                {:conductors {:nemesis (nemesis/clock-scrambler 10000)}}))
 
-(def flush-compact-test
+(defn flush-compact-test
+  []
   (mv-map-test "flush and compact"
                {:conductors {:nemesis (conductors/flush-and-compacter)}}))
 
-(def bridge-test-bootstrap
+(defn bridge-test-bootstrap
+  []
   (mv-map-test "bridge bootstrap"
                {:bootstrap (atom (carly.utility/node-subset 2))
                 :conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
                              :bootstrapper (conductors/bootstrapper)}}))
 
-(def halves-test-bootstrap
+(defn halves-test-bootstrap
+  []
   (mv-map-test "halves bootstrap"
                {:bootstrap (atom (carly.utility/node-subset 2))
                 :conductors {:nemesis (nemesis/partition-random-halves)
                              :bootstrapper (conductors/bootstrapper)}}))
 
-(def isolate-node-test-bootstrap
+(defn isolate-node-test-bootstrap
+  []
   (mv-map-test "isolate node bootstrap"
                {:bootstrap (atom (carly.utility/node-subset 2))
                 :conductors {:nemesis (nemesis/partition-random-node)
                              :bootstrapper (conductors/bootstrapper)}}))
 
-(def crash-subset-test-bootstrap
+(defn crash-subset-test-bootstrap
+  []
   (mv-map-test "crash bootstrap"
                {:bootstrap (atom (carly.utility/node-subset 2))
                 :conductors {:nemesis (crash-nemesis)
                              :bootstrapper (conductors/bootstrapper)}}))
 
-(def clock-drift-test-bootstrap
+(defn clock-drift-test-bootstrap
+  []
   (mv-map-test "clock drift bootstrap"
                {:bootstrap (atom (carly.utility/node-subset 2))
                 :conductors {:nemesis (nemesis/clock-scrambler 10000)
                              :bootstrapper (conductors/bootstrapper)}}))
 
-(def bridge-test-decommission
+(defn bridge-test-decommission
+  []
   (mv-map-test "bridge decommission"
                {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
                              :decommissioner (conductors/decommissioner)}}))
 
-(def halves-test-decommission
+(defn halves-test-decommission
+  []
   (mv-map-test "halves decommission"
                {:conductors {:nemesis (nemesis/partition-random-halves)
                              :decommissioner (conductors/decommissioner)}}))
 
-(def isolate-node-test-decommission
+(defn isolate-node-test-decommission
+  []
   (mv-map-test "isolate node decommission"
                {:conductors {:nemesis (nemesis/partition-random-node)
                              :decommissioner (conductors/decommissioner)}}))
 
-(def crash-subset-test-decommission
+(defn crash-subset-test-decommission
+  []
   (mv-map-test "crash decommission"
                {:conductors {:nemesis (crash-nemesis)
                              :decommissioner (conductors/decommissioner)}}))
 
-(def clock-drift-test-decommission
+(defn clock-drift-test-decommission
+  []
   (mv-map-test "clock drift decommission"
                {:conductors {:nemesis (nemesis/clock-scrambler 10000)
                              :decommissioner (conductors/decommissioner)}}))

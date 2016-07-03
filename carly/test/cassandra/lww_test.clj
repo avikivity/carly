@@ -6,6 +6,7 @@
             [jepsen [core :as jepsen]
              [report :as report]]))
 
+(use-fixtures :each carly.docker/setup!)
 ; These are commented out - they should fail!
 ; Present as a sanity check on the linearizability checker
 (comment (deftest lwt-test-bridge

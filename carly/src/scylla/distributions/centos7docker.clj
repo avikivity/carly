@@ -59,12 +59,9 @@
     jepsen.db/DB
     (setup! [self test node]
       (logging/info node "setup")
-      (scylla.instance/wipe! self)
-      (carly.hooks/wait-for-all-nodes-ready)
       (scylla.instance/install! self :libfaketime :psmisc :epel-release)
       (jepsen.control/exec :yum :-y :clean :expire-cache)
       (jepsen.control/exec :yum :-y :update)
-      (scylla.instance/install-scylla-rpms! self repository-url node)
       (jepsen.control/exec :systemctl :enable :scylla-server)
       (jepsen.control/exec :systemctl :enable :scylla-jmx)
       (jepsen.control/exec :yum :-y :clean :all)

@@ -23,6 +23,7 @@
                    :counter :counter
                    :clock :clock
                    :slow-network :slow-network
+                   :no-slow (complement :slow-network)
                    :sanity :sanity
                    :no-bootstrap (fn
                                    [metadata]

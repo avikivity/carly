@@ -3,9 +3,11 @@
             [clojure.pprint :refer [pprint]]
             [cassandra.counter :refer :all]
             [cassandra.core-test :refer :all]
+            [carly.docker]
             [jepsen [core :as jepsen]
              [report :as report]]))
 
+(use-fixtures :each carly.docker/setup!)
 
 ;;; Regular tests without cluster composition changes                           
 ;(deftest ^:counter ^:steady cql-counter-inc-bridge                             
