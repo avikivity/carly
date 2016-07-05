@@ -9,7 +9,7 @@
 
 (use-fixtures :each carly.docker/setup!)
 
-(deftest ^:map ^:steady cql-map-bridge
+(deftest ^:first-in-file ^:map ^:steady cql-map-bridge
   (run-test! (bridge-test)))
 
 (deftest ^:map ^:steady cql-map-isolate-node

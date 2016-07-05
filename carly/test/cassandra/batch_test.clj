@@ -10,7 +10,7 @@
 (use-fixtures :each carly.docker/setup!)
 
 ;; Steady state cluster tests
-(deftest ^:batch ^:steady batch-bridge
+(deftest ^:first-in-file ^:batch ^:steady batch-bridge
   (run-test! (bridge-test nil)))
 
 (deftest ^:batch ^:steady batch-isolate-node

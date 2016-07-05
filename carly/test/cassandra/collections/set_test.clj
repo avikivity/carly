@@ -9,7 +9,7 @@
 
 (use-fixtures :each carly.docker/setup!)
 
-(deftest ^:set ^:steady cql-set-bridge
+(deftest ^:first-in-file ^:set ^:steady cql-set-bridge
   (run-test! (bridge-test)))
 
 (deftest ^:set ^:steady cql-set-isolate-node

@@ -60,11 +60,8 @@
     (setup! [self test node]
       (logging/info node "setup")
       (scylla.instance/install! self :libfaketime :psmisc :epel-release)
-      (jepsen.control/exec :yum :-y :clean :expire-cache)
-      (jepsen.control/exec :yum :-y :update)
       (jepsen.control/exec :systemctl :enable :scylla-server)
       (jepsen.control/exec :systemctl :enable :scylla-jmx)
-      (jepsen.control/exec :yum :-y :clean :all)
       (jepsen.control/exec :mkdir :-p "/var/lib/scylla")
       (jepsen.control/exec :chown "scylla.scylla" "/var/lib/scylla")
       (carly.core/transform-file "/etc/sysconfig/scylla-server"

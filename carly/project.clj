@@ -25,6 +25,7 @@
                    :slow-network :slow-network
                    :no-slow (complement :slow-network)
                    :sanity :sanity
+                   :first-in-file :first-in-file
                    :no-bootstrap (fn
                                    [metadata]
                                    (->> metadata
