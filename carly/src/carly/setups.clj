@@ -32,6 +32,6 @@
   (catch java.io.FileNotFoundException e))
 
 (when-not (resolve 'default)
-  (defn default [] (SETUPS :fedora22rpms)))
+  (defn default [] (SETUPS :centos7docker)))
 
 (logging/info "default test setup:" default)
