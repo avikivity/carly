@@ -34,5 +34,7 @@ generate-keys:
 	cd carly ; ssh-keygen -f jepsen_key -N ''
 	cd carly ; mv jepsen_key private_key_rsa
 	cd carly ; mv jepsen_key.pub public_key_rsa
+	touch ~/.ssh/known_hosts
+	chmod 600 ~/.ssh/known_hosts
 
 carly-check: carly-dependencies

@@ -5,7 +5,11 @@
     [clojure.tools.logging :as logging]
     [carly.core :as core]))
 
-(def HOW-MANY 5)
+
+(def HOW-MANY
+  (if-let [environment-spec (System/getenv "CONTAINERS")]
+    (Integer. environment-spec)
+    5))
 
 (defn docker!
   [& arguments]

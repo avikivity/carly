@@ -26,12 +26,12 @@
      :cassandra-stress-executable (str (System/getenv "HOME") "/scylla-tools-java/tools/bin/cassandra-stress")
     }))
 
+(defn default [] (SETUPS :centos7docker))
+
 ; override the default setup using the file "setup.clj"
 (try
   (load-file "setup.clj")
   (catch java.io.FileNotFoundException e))
 
-(when-not (resolve 'default)
-  (defn default [] (SETUPS :centos7docker)))
 
 (logging/info "default test setup:" default)
