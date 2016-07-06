@@ -8,12 +8,12 @@ home_bin:
 	mkdir -p $(HOME_BIN)
 
 leiningen: home_bin
-	[[ -x $(LEIN) ]] || wget -O $(HOME_BIN)/lein https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
+	test -x $(LEIN) || wget -O $(HOME_BIN)/lein https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
 	chmod +x $(LEIN)
 	$(LEIN) version
 
 scylladb-jepsen: leiningen
-	[[ -d ~/scylladb-jepsen ]] || git clone https://github.com/scylladb/jepsen --branch carly_oriented ~/scylladb-jepsen
+	test -d ~/scylladb-jepsen  || git clone https://github.com/scylladb/jepsen --branch carly_oriented ~/scylladb-jepsen
 	cd ~/scylladb-jepsen/jepsen ; $(LEIN) install
 
 install-docker:
@@ -26,7 +26,7 @@ carly-dependencies:
 	cd carly ; $(LEIN) deps
 
 scylla-tools-java:
-	[[ -d ~/scylla-tools-java ]] || git clone https://github.com/scylladb/scylla-tools-java.git ~/scylla-tools-java
+	test -d ~/scylla-tools-java || git clone https://github.com/scylladb/scylla-tools-java.git ~/scylla-tools-java
 	cd ~/scylla-tools-java ; ant
 
 generate-keys:
