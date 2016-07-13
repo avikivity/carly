@@ -59,13 +59,12 @@
     jepsen.db/DB
     (setup! [self test node]
       (logging/info node "setup")
-      (scylla.instance/install! self :libfaketime :psmisc :epel-release)
-      (jepsen.control/exec :systemctl :enable :scylla-server)
-      (jepsen.control/exec :systemctl :enable :scylla-jmx)
-      (jepsen.control/exec :mkdir :-p "/var/lib/scylla")
-      (jepsen.control/exec :chown "scylla.scylla" "/var/lib/scylla")
+      (scylla.instance/install! self :libfaketime :psmisc :epel-release :sudo)
+      (jepsen.control/exec :sed :-i "s/Defaults.*requiretty//" "/etc/sudoers")
+
+
       (carly.core/transform-file "/etc/sysconfig/scylla-server"
-                                 (augment-command-line-arguments { :developer-mode "1"
+                                 (augment-command-line-arguments {:developer-mode "1"
                                                                   :memory "8G"
                                                                   :cpuset (scylla.common/cpuset! node)}))
       (logging/info node "deleted data files")
