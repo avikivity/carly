@@ -59,7 +59,7 @@
     jepsen.db/DB
     (setup! [self test node]
       (logging/info node "setup")
-      (scylla.instance/install! self :libfaketime :psmisc :epel-release :sudo)
+      (scylla.instance/install! self :libfaketime :psmisc :sudo :iptables)
       (jepsen.control/exec :sed :-i "s/Defaults.*requiretty//" "/etc/sudoers")
 
 
