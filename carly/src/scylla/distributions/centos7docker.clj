@@ -47,7 +47,7 @@
         LOG_FILE  "/tmp/scylla.log"]
     (logging/info node "writing logs to " LOG_FILE start "-" finish)
     (jepsen.control/exec :journalctl :-u "scylla-server" :--since start :--until finish :> LOG_FILE)
-    [LOG_FILE]))
+    LOG_FILE))
 
 (defn first-teardown?
   [node]
@@ -83,7 +83,9 @@
           (record-time :finish node)
           (let [logfile (create-logs! node)
                 local-store (str (jepsen.store/path! test (name node) "scylla.log")) ]
-            (jepsen.control/download logfile local-store)))))
+            (logging/info node "will save" logfile "into" local-store)
+            (->> (jepsen.control/exec :cat logfile)
+                 (spit local-store))))))
 
     scylla.instance/Instance
     (run-stop-command! [instance]
