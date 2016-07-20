@@ -64,16 +64,18 @@
 
 
       (carly.core/transform-file "/etc/sysconfig/scylla-server"
-                                 (augment-command-line-arguments {:developer-mode "1"
-                                                                  :memory "8G"
+                                 (augment-command-line-arguments {:memory "8G"
                                                                   :cpuset (scylla.common/cpuset! node)}))
-      (logging/info node "deleted data files")
       (let [config-path "/etc/scylla/scylla.yaml"]
         (scylla.instance/configure! node test config-path))
       (jepsen.nemesis/set-time! 0)
       (jepsen.control.net/fast-force)
+      (scylla.instance/wipe! self)
+      (carly.hooks/wait-for-all-nodes-ready)
+      (Thread/sleep 10000)
       (record-time :start node)
       (scylla.instance/start! self)
+      (jepsen.control/exec :systemctl :status :scylla-server)
       (scylla.common/sleep-grace-period node)
       (logging/info node "setup done"))
 

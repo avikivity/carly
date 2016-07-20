@@ -10,7 +10,7 @@
            :ready
            (fn [_ _ _ nodes]
              (when (= nodes @test-nodes)
-               (logging/info "all nodes are ready for setup for a new test")
+               (logging/info "all nodes are ready")
                (deliver all-nodes-ready true))))
 
 (defn signal-ready!

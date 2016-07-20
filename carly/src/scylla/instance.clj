@@ -54,8 +54,9 @@
 
 (defn wipe! 
   [instance]
+  (logging/info *host* "wipe!")
   (stop! instance)
-  (carly.hacks/saferun (jepsen.control/exec :rm :-rf "/var/lib/scylla/"))
+  (carly.hacks/saferun (jepsen.control/exec :rm :-rf "/var/lib/scylla/*"))
   (carly.hooks/signal-ready! *host*))
 
 (defn configure! [node test config-path]
@@ -67,8 +68,7 @@
                                             [{:class_name "LZ4Compressor"}]})
         new-config  (-> config
                       yaml/parse-string
-                      (merge {:cluster_name "jepsen"
-                              :row_cache_size_in_mb 20
+                      (merge {:row_cache_size_in_mb 20
                               :seed_provider 
                                  [ { :class_name "org.apache.cassandra.locator.SimpleSeedProvider"
                                      :parameters 
