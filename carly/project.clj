@@ -8,6 +8,7 @@
                  [clj-yaml "0.4.0"]
                  [clojurewerkz/cassaforte "2.1.0-beta1"]
                  [clj-ssh "0.5.14"]
+                 [listora/again "0.1.0"]
                  [carly/jepsen "0.0.7-SNAPSHOT"] ]
   :plugins      [ [test2junit "1.2.2"] ]
   :test2junit-output-dir "junit-report"

@@ -3,8 +3,9 @@
     [clojure.string]
     [clj-yaml.core :as yaml]
     [clojure.tools.logging :as logging]
+    [again.core :as again]
+    [carly.hacks :as hacks]
     [carly.core :as core]))
-
 
 (def HOW-MANY
   (if-let [environment-spec (System/getenv "CONTAINERS")]
@@ -36,10 +37,13 @@
 
 (defn build-container!
   [image number]
-  (let [container (str "carly" number)]
-    (logging/info "building container" container)
-    (core/shell! :docker :run :--privileged :-d :--name container image)
-    (setup-ssh! container)))
+  (again/with-retries [500 500]
+    (let [container (str "carly" number)]
+      (hacks/saferun
+        (core/shell! :docker :rm :-f :--volumes container))
+      (logging/info "building container" container)
+      (core/shell! :docker :run :--privileged :-d :--name container image)
+      (setup-ssh! container))))
 
 (defn build-containers!
   [how-many image]
