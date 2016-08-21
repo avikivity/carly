@@ -1,20 +1,9 @@
-FROM scylladb/scylla
+FROM scylladb/scylla:1.3-rc3
 MAINTAINER Yoav Kleinberger <yoav@scylladb.com>
 
-USER root
-# enable systemd
-ENV container docker
-VOLUME [ "/sys/fs/cgroup" ]
-CMD ["/usr/sbin/init"]
-
-# ssh
-RUN mkdir -p /root/.ssh
-RUN chmod 700 /root/.ssh
-RUN touch /root/.ssh/authorized_keys
-RUN chmod 600 /root/.ssh/authorized_keys
-RUN yum -y install openssh-server iproute sudo
-RUN systemctl enable sshd
 EXPOSE 22
 
 # fix sudoers
-ADD sudoers /etc/sudoers 
+ADD etc/supervisord.conf /etc/supervisord.conf 
+ADD scylla-service.sh /scylla-service.sh
+ADD scylla-jmx-service.sh /scylla-jmx-service.sh

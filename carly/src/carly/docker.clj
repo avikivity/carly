@@ -32,8 +32,9 @@
   (core/shell! :docker :cp :-L "public_key_rsa" (str container ":/root/.ssh/authorized_keys"))
   (core/shell! :docker :exec container :chmod :600 "/root/.ssh/")
   (core/shell! :docker :exec container :yum :-y :install :openssh-server)
-  (core/shell! :docker :exec container :systemctl :enable :sshd)
-  (core/shell! :docker :exec container :systemctl :start :sshd))
+  (core/shell! :docker :exec container :ssh-keygen :-f "/etc/ssh/ssh_host_rsa_key" :-N "" :-t :rsa)
+  (core/shell! :docker :exec container :ssh-keygen :-f "/etc/ssh/ssh_host_dsa_key" :-N "" :-t :dsa)
+  (core/shell! :docker :exec container "/sbin/sshd"))
 
 (defn build-container!
   [image number]
@@ -42,7 +43,7 @@
       (hacks/saferun
         (core/shell! :docker :rm :-f :--volumes container))
       (logging/info "building container" container)
-      (core/shell! :docker :run :--privileged :-d :--name container image)
+      (core/shell! :docker :run :-d :--name container image)
       (setup-ssh! container))))
 
 (defn build-containers!
@@ -59,7 +60,7 @@
 (defn setup!
   [test]
   (destroy-containers!)
-  (build-containers! HOW-MANY "haarcuba/scylla_systemd")
+  (build-containers! HOW-MANY "carlila")
   (Thread/sleep 5000)
   (test))
 
