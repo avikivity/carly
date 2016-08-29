@@ -43,7 +43,7 @@
       (hacks/saferun
         (core/shell! :docker :rm :-f :--volumes container))
       (logging/info "building container" container)
-      (core/shell! :docker :run :-d :--name container image)
+      (core/shell! :docker :run :--privileged :-d :--name container image)
       (setup-ssh! container))))
 
 (defn build-containers!
@@ -60,7 +60,7 @@
 (defn setup!
   [test]
   (destroy-containers!)
-  (build-containers! HOW-MANY "carlila")
+  (build-containers! HOW-MANY "scylladb/scylla:1.3.0")
   (Thread/sleep 5000)
   (test))
 
