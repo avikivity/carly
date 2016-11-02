@@ -75,7 +75,7 @@
       (Thread/sleep 10000)
       (record-time :start node)
       (scylla.instance/start! self)
-      (jepsen.control/exec :systemctl :status :scylla-server)
+      (jepsen.control/exec :supervisorctl :status :scylla)
       (scylla.common/sleep-grace-period node)
       (logging/info node "setup done"))
 
@@ -91,12 +91,12 @@
 
     scylla.instance/Instance
     (run-stop-command! [instance]
-      (jepsen.util/meh (jepsen.control/exec :systemctl :stop :scylla-jmx))
-      (jepsen.util/meh (jepsen.control/exec :systemctl :stop :scylla-server)))
+      (jepsen.util/meh (jepsen.control/exec :supervisorctl :stop :scylla-jmx))
+      (jepsen.util/meh (jepsen.control/exec :supervisorctl :stop :scylla)))
 
     (start! [instance]
-      (jepsen.control/exec :systemctl :start :scylla-server)
-      (jepsen.control/exec :systemctl :start :scylla-jmx))
+      (jepsen.control/exec :supervisorctl :start :scylla)
+      (jepsen.control/exec :supervisorctl :start :scylla-jmx))
     
     (package-manager [instance] :yum)
 
