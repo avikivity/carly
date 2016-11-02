@@ -3,9 +3,11 @@
             [clojure.pprint :refer [pprint]]
             [cassandra.mv :refer :all]
             [cassandra.core-test :refer :all]
+            [carly.docker]
             [jepsen [core :as jepsen]
              [report :as report]]))
 
+(use-fixtures :each carly.docker/setup!)
 
 ;;; Steady state cluster tests                            
 ;(deftest ^:mv ^:steady mv-bridge                         

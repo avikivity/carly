@@ -3,8 +3,61 @@
             [jepsen.control :refer [*host*]]
             [carly.core]
             [carly.hooks]
+            [carly.hacks]
+            [scylla.distributions.redhat :as redhat]
             [clj-yaml.core :as yaml]
             [clojure.tools.logging :as logging]))
+
+(defprotocol Instance
+  (run-stop-command!  [instance])
+  (start! [instance])
+  (log-paths [instance])
+  (package-manager [instance])
+  (retrieve-repository! [instance url]))
+
+(defn package!
+  [instance action packages]
+  (logging/info "package!" action packages)
+  (let [package-manager (package-manager instance)
+        arguments       (concat [package-manager action :-y] packages)]
+    (apply jepsen.control/exec arguments)))
+
+(def installed (atom #{}))
+(defn install!
+  [instance & packages]
+  (package! instance :install packages))
+
+(defn uninstall!
+  [instance & packages]
+  (carly.hacks/saferun
+    (package! instance :remove packages)))
+
+(defn install-scylla-rpms!
+  [instance repository-url node]
+    (if (@installed node)
+      (logging/info node "scylla packages already installed, skipping installation"))
+    (when-not (@installed node)
+      (logging/info node "installing scylla packages")
+      (retrieve-repository! instance repository-url)
+      (uninstall! instance :scylla-server :scylla-jmx :scylla-tools)
+      (install! instance :scylla-server :scylla-jmx :scylla-tools)
+      (swap! installed conj node)))
+
+(defn stop! 
+  [instance]
+  (logging/info *host* "will stop scylla")
+  (run-stop-command! instance) 
+  (while (.contains (jepsen.control/exec :ps :-ef) "scylla")
+    (Thread/sleep 1000)
+    (logging/info *host* "scylla is still running"))
+  (logging/info *host* "has stopped scylla"))
+
+(defn wipe! 
+  [instance]
+  (logging/info *host* "wipe!")
+  (stop! instance)
+  (carly.hacks/saferun (jepsen.control/exec :rm :-rf "/var/lib/scylla/*"))
+  (carly.hooks/signal-ready! *host*))
 
 (defn configure! [node test config-path]
   (logging/info node "configuring ScyllaDB")
@@ -15,8 +68,7 @@
                                             [{:class_name "LZ4Compressor"}]})
         new-config  (-> config
                       yaml/parse-string
-                      (merge {:cluster_name "jepsen"
-                              :row_cache_size_in_mb 20
+                      (merge {:row_cache_size_in_mb 20
                               :seed_provider 
                                  [ { :class_name "org.apache.cassandra.locator.SimpleSeedProvider"
                                      :parameters 
@@ -36,21 +88,3 @@
                       yaml/generate-string) ] 
         (jepsen.control/exec :echo new-config :> config-path)
         (logging/info node "configure! finished")))
-
-(defprotocol Instance
-  (run-stop-command!  [instance])
-  (start! [instance])
-  (log-paths [instance]))
-
-(defn stop!  [instance]
-  (logging/info *host* "will stop scylla")
-  (run-stop-command! instance) 
-  (while (.contains (jepsen.control/exec :ps :-ef) "scylla")
-    (Thread/sleep 1000)
-    (logging/info *host* "scylla is still running"))
-  (logging/info *host* "has stopped scylla"))
-
-(defn wipe!  [instance]
-  (stop! instance)
-  (jepsen.util/meh (jepsen.control/exec :rm :-rf "/var/lib/scylla/"))
-  (carly.hooks/signal-ready! *host*))

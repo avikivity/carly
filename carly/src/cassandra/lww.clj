@@ -136,18 +136,22 @@
                                     {:linear checker/linearizable})})
          opts))
 
-(def bridge-test
+(defn bridge-test
+  []
   (lww-cas-register-test "bridge"
                          {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))}}))
 
-(def halves-test
+(defn halves-test
+  []
   (lww-cas-register-test "halves"
                          {:conductors {:nemesis (nemesis/partition-random-halves)}}))
 
-(def isolate-node-test
+(defn isolate-node-test
+  []
   (lww-cas-register-test "isolate node"
                          {:conductors {:nemesis (nemesis/partition-random-node)}}))
 
-(def crash-subset-test
+(defn crash-subset-test
+  []
   (lww-cas-register-test "crash"
                          {:conductors {:nemesis crash-nemesis}}))

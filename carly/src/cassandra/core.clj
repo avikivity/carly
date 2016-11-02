@@ -291,7 +291,7 @@
 (defn cassandra-test
   [name opts]
   (merge tests/noop-test
-         carly.setups/default
+         (carly.setups/default)
          {
           :name    (str "cassandra " name)
           :os      jepsen.os/noop

@@ -4,6 +4,14 @@
             [clojure.tools.logging :as logging])
   (:import (java.net InetAddress)))
 
+(defn shell!
+  [& arguments]
+  (let [arguments (map name arguments)
+        result (apply clojure.java.shell/sh arguments)]
+    (if-not (= 0  (:exit result))
+       (throw (Exception. (str "command failed! '" (clojure.string/join " " arguments) "' " result)))
+       result)))
+
 (defn dns-resolve
   [hostname]
   (.getHostAddress (InetAddress/getByName (name hostname))))
@@ -60,32 +68,6 @@
          seq
          (map pair->argument)
          (clojure.string/join " "))))
-
-(defn all-containers-up
- []
- (let [lxc-list-output (:out (clojure.java.shell/sh "lxc" "list"))
-       lines (count (clojure.string/split-lines lxc-list-output))
-       containers (/  (- lines 3) 2)
-       ips (vec (re-seq #"(?m)\d+\.\d+\.\d+\.\d+" lxc-list-output))
-       ]
-   (= (count ips) containers)))
-
-(defn lxd-wait-for-containers-up
-  []
-  (while (not (all-containers-up))
-             (logging/info "waiting for containers")
-             (Thread/sleep 1000)))
-
-(defn lxd-containers-ips
-  []
-  (lxd-wait-for-containers-up)
-  (let [result (->>  (clojure.java.shell/sh "lxc" "list")
-                     :out
-                     (re-seq #"(?m)\d+\.\d+\.\d+\.\d+")
-                     (map keyword)
-                     vec)]
-    (logging/info "found" (count result) "containers at" result)
-    result))
 
 (defn choose
   [k collection]

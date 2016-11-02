@@ -121,7 +121,7 @@
   (let [cass_log_name "cassandra-stress.log"
         cass_log_tmp  (str "/tmp/" cass_log_name)
         cass_log_store (.getCanonicalPath (store/path! test cass_log_name))
-        shell-arguments [(carly.setups/default :cassandra-stress-executable) "write" "no-warmup" "duration=5m" "-rate" "threads=500" "-mode" "native" "cql3" "-node" (dns-resolve (first (:nodes test))) "-log" (str "file=" cass_log_tmp)]
+        shell-arguments [(:cassandra-stress-executable test) "write" "no-warmup" "duration=5m" "-rate" "threads=500" "-mode" "native" "cql3" "-node" (dns-resolve (first (:nodes test))) "-log" (str "file=" cass_log_tmp)]
         ]
     
     (info "running stress test:" shell-arguments)
@@ -163,15 +163,18 @@
            (merge {:conductors {:nemesis (nemesis/partition-random-node)}}
                   opts)))
 
-(def crash-subset-test
+(defn crash-subset-test
+  []
   (batch-set-test "crash"
                   {:conductors {:nemesis (crash-nemesis)}}))
 
-(def clock-drift-test
+(defn clock-drift-test
+  []
   (batch-set-test "clock drift"
                   {:conductors {:nemesis (nemesis/clock-scrambler 10000)}}))
 
-(def flush-compact-test
+(defn flush-compact-test
+  []
   (batch-set-test "flush and compact"
                   {:conductors {:nemesis (conductors/flush-and-compacter)}}))
 
@@ -207,7 +210,8 @@
                                 :bootstrapper (conductors/bootstrapper)}}
              opts)))
 
-(def clock-drift-test-bootstrap
+(defn clock-drift-test-bootstrap
+  []
   (batch-set-test "clock drift bootstrap"
                   {:bootstrap (atom (carly.utility/node-subset 2))
                    :conductors {:nemesis (nemesis/clock-scrambler 10000)
@@ -234,17 +238,20 @@
                                 :decommissioner (conductors/decommissioner)}}
                   opts)))
 
-(def crash-subset-test-decommission
+(defn crash-subset-test-decommission
+  []
   (batch-set-test "crash decommission"
                   {:conductors {:nemesis (crash-nemesis)
                                 :decommissioner (conductors/decommissioner)}}))
 
-(def clock-drift-test-decommission
+(defn clock-drift-test-decommission
+  []
   (batch-set-test "clock drift decommission"
                   {:conductors {:nemesis (nemesis/clock-scrambler 10000)
                                 :decommissioner (conductors/decommissioner)}}))
 
-(def crash-subset-test-bootstrap-stress
+(defn crash-subset-test-bootstrap-stress
+  []
   (let [my_test (crash-subset-test-bootstrap {:sidekick run-cassandra-stress})]
      (assoc my_test :name (str (:name my_test) " stress"))))
 
@@ -257,30 +264,39 @@
       (assoc my_test :name (str (:name my_test) " slow network"))))
 
 
-(def bridge-test-slow-net
+(defn bridge-test-slow-net
+  []
   (slow-net-test bridge-test))
 
-(def halves-test-slow-net
+(defn halves-test-slow-net
+  []
   (slow-net-test halves-test))
 
-(def isolate-node-test-slow-net
+(defn isolate-node-test-slow-net
+  []
   (slow-net-test isolate-node-test))
 
-(def bridge-test-bootstrap-slow-net
+(defn bridge-test-bootstrap-slow-net
+  []
   (slow-net-test bridge-test-bootstrap))
 
-(def halves-test-bootstrap-slow-net
+(defn halves-test-bootstrap-slow-net
+  []
   (slow-net-test halves-test-bootstrap))
 
-(def isolate-node-test-bootstrap-slow-net
+(defn isolate-node-test-bootstrap-slow-net
+  []
   (slow-net-test isolate-node-test-bootstrap))
 
-(def bridge-test-decommission-slow-net
+(defn bridge-test-decommission-slow-net
+  []
   (slow-net-test bridge-test-decommission))
 
-(def halves-test-decommission-slow-net
+(defn halves-test-decommission-slow-net
+  []
   (slow-net-test halves-test-decommission))
 
-(def isolate-node-test-decommission-slow-net
+(defn isolate-node-test-decommission-slow-net
+  []
   (slow-net-test isolate-node-test-decommission))
 

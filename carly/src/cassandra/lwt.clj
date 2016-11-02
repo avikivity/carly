@@ -157,81 +157,97 @@
                                     {:linear extra-checker/enhanced-linearizable})})
          opts))
 
-(def bridge-test
+(defn bridge-test
+  []
   (cas-register-test "bridge"
                      {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))}}))
 
-(def halves-test
+(defn halves-test
+  []
   (cas-register-test "halves"
                      {:conductors {:nemesis (nemesis/partition-random-halves)}}))
 
-(def isolate-node-test
+(defn isolate-node-test
+  []
   (cas-register-test "isolate node"
                      {:conductors {:nemesis (nemesis/partition-random-node)}}))
 
-(def crash-subset-test
+(defn crash-subset-test
+  []
   (cas-register-test "crash"
                      {:conductors {:nemesis (crash-nemesis)}}))
 
-(def flush-compact-test
+(defn flush-compact-test
+  []
   (cas-register-test "flush and compact"
                   {:conductors {:nemesis (conductors/flush-and-compacter)}}))
 
-(def clock-drift-test
+(defn clock-drift-test
+  []
   (cas-register-test "clock drift"
                      {:conductors {:nemesis (nemesis/clock-scrambler 10000)}}))
 
-(def bridge-test-bootstrap
+(defn bridge-test-bootstrap
+  []
   (cas-register-test "bridge bootstrap"
                      {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
                                    :bootstrapper (conductors/bootstrapper)}}))
 
-(def halves-test-bootstrap
+(defn halves-test-bootstrap
+  []
   (cas-register-test "halves bootstrap"
                      {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (nemesis/partition-random-halves)
                                    :bootstrapper (conductors/bootstrapper)}}))
 
-(def isolate-node-test-bootstrap
+(defn isolate-node-test-bootstrap
+  []
   (cas-register-test "isolate node bootstrap"
                      {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (nemesis/partition-random-node)
                                    :bootstrapper (conductors/bootstrapper)}}))
 
-(def crash-subset-test-bootstrap
+(defn crash-subset-test-bootstrap
+  []
   (cas-register-test "crash bootstrap"
                      {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (crash-nemesis)
                                    :bootstrapper (conductors/bootstrapper)}}))
 
-(def clock-drift-test-bootstrap
+(defn clock-drift-test-bootstrap
+  []
   (cas-register-test "clock drift bootstrap"
                      {:bootstrap (atom (carly.utility/node-subset 2))
                       :conductors {:nemesis (nemesis/clock-scrambler 10000)
                                    :bootstrapper (conductors/bootstrapper)}}))
 
-(def bridge-test-decommission
+(defn bridge-test-decommission
+  []
   (cas-register-test "bridge decommission"
                      {:conductors {:nemesis (nemesis/partitioner (comp nemesis/bridge shuffle))
                                    :decommissioner (conductors/decommissioner)}}))
 
-(def halves-test-decommission
+(defn halves-test-decommission
+  []
   (cas-register-test "halves decommission"
                      {:conductors {:nemesis (nemesis/partition-random-halves)
                                    :decommissioner (conductors/decommissioner)}}))
 
-(def isolate-node-test-decommission
+(defn isolate-node-test-decommission
+  []
   (cas-register-test "isolate node decommission"
                      {:conductors {:nemesis (nemesis/partition-random-node)
                                    :decommissioner (conductors/decommissioner)}}))
 
-(def crash-subset-test-decommission
+(defn crash-subset-test-decommission
+  []
   (cas-register-test "crash decommission"
                      {:conductors {:nemesis (crash-nemesis)
                                    :decommissioner (conductors/decommissioner)}}))
 
-(def clock-drift-test-decommission
+(defn clock-drift-test-decommission
+  []
   (cas-register-test "clock drift decommission"
                      {:conductors {:nemesis (nemesis/clock-scrambler 10000)
                                    :decommissioner (conductors/decommissioner)}}))

@@ -6,18 +6,21 @@
             [carly.hooks]
             [carly.hacks]
             [carly.checkers]
+            [carly.docker]
             [clojure.tools.logging :as logging]
             [jepsen [core :as jepsen]
              [generator]
              [report :as report]]))
 
+(use-fixtures :each carly.docker/setup!)
 
 (defn run-test!
   [test]
-  (flush) ; Make sure nothing buffered
   (if (System/getenv "JUST_LIST")
     (logging/info (carly.hacks/testing-metadata-name))
-    (do (carly.hooks/start! test)
+    (do 
+        (flush) ; Make sure nothing buffered
+        (carly.hooks/start! test)
         (let [test-run (jepsen/run! test)]
           (is (:valid? (:results test-run)))))))
 
